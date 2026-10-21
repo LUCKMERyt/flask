@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Мой личный сайт{% endblock %}</title>
+    <link rel="stylesheet"href="{{ url_for('static', filename='custom.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <header class="site-header">
+        <nav class="navigation">
+            <a class="site-name" href="/">Мой сайт</a>
+
+            <div class="navigation__links">
+                <a href="/">Главная</a>
+                <a href="{{ url_for('about') }}">Обо мне</a>
+                <a href="{{ url_for('login') }}">Войти</a>
+                <a href="{{ url_for('neo') }}">Матрица</a>
+                <a href="{{ url_for('comm') }}">Отзывы</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="page-content">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

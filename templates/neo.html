@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Матрица{% endblock %}
+{% block body_class %}neo-page{% endblock %}
+
+{% block content %}
+<section class="matrix">
+    <div class="matrix__rain" aria-hidden="true">
+        <div class="matrix__column">0101<br>NEO<br>1010<br>CODE<br>0110<br>1101<br>0101<br>1010<br>CODE<br>1100</div>
+        <div class="matrix__column">1010<br>0101<br>MATRIX<br>1100<br>NEO<br>0110<br>1010<br>CODE<br>0101<br>1101</div>
+        <div class="matrix__column">CODE<br>1100<br>0101<br>1010<br>SYSTEM<br>0110<br>NEO<br>1101<br>0101<br>1010</div>
+        <div class="matrix__column">0110<br>1010<br>1101<br>CODE<br>0101<br>MATRIX<br>1010<br>0110<br>1100<br>NEO</div>
+    </div>
+
+    <h1>Это матрица</h1>
+    <p class="matrix__greeting">ПРИВЕТ</p>
+</section>
+{% endblock %}

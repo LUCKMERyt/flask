@@ -1,0 +1,237 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #9c9999;
+    color: #222;
+    font-family: Arial, sans-serif;
+}
+
+.home {
+    padding: 24px;
+    background: #fff;
+    border-radius: 8px;
+}
+
+.site-header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.navigation {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-name,
+.navigation__links a {
+    color: #222;
+    text-decoration: none;
+}
+
+.site-name {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.navigation__links {
+    display: flex;
+    gap: 20px;
+}
+
+.navigation__links a:hover {
+    text-decoration: underline;
+}
+
+.page-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.about {
+    max-width: 800px;
+    margin: 10px auto;
+}
+
+.about__title {
+    margin-bottom: 24px;
+    font-size: 28px;
+}
+
+.education,
+.login {
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+}
+
+.education__title {
+    margin: 0 0 16px;
+    font-size: 20px;
+}
+
+.education__institution {
+    margin: 0 0 8px;
+}
+
+.education__details {
+    margin: 0;
+    color: #777;
+}
+
+.login {
+    max-width: 420px;
+    margin: 30px auto;
+}
+
+.login__title {
+    margin: 0 0 24px;
+    text-align: center;
+    font-size: 26px;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font: inherit;
+}
+
+.login-form__button {
+    width: 100%;
+    padding: 11px;
+    border: 0;
+    border-radius: 4px;
+    background: #222;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.login-form__button:hover {
+    background: #444;
+}
+
+.login__errors {
+    margin-bottom: 18px;
+    padding: 10px 14px;
+    border: 1px solid #e2aaaa;
+    border-radius: 4px;
+    background: #fff0f0;
+    color: #8b2222;
+}
+
+.login__errors p {
+    margin: 4px 0;
+}
+
+.comm input {
+    width: 1000px;
+    height: 190px;
+}
+
+
+@media (max-width: 600px) {
+    .navigation {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .navigation__links {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+}
+
+
+
+/* ************NEO******************/
+
+.neo-page {
+    margin: 0;
+    min-height: 100vh;
+    background: #000;
+    color: #00ff41;
+    font-family: monospace;
+}
+
+.neo-page .page-content {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.neo-page .site-header {
+    background: #000;
+    border-bottom: 1px solid #00ff41;
+}
+
+.neo-page .navigation a {
+    color: #00ff41;
+}
+
+.neo-page .matrix {
+    position: relative;
+    min-height: calc(100vh - 60px);
+    overflow: hidden;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    background: #000;
+}
+
+.neo-page .matrix__rain {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.neo-page .matrix__column {
+    position: absolute;
+    top: -100%;
+    color: #00ff41;
+    font-size: 20px;
+    line-height: 1.5;
+    text-shadow: 0 0 8px #00ff41;
+    animation: matrix-fall 8s linear infinite;
+}
+
+.neo-page .matrix__column:nth-child(1) { left: 10%; }
+.neo-page .matrix__column:nth-child(2) { left: 35%; animation-delay: -3s; }
+.neo-page .matrix__column:nth-child(3) { left: 60%; animation-delay: -5s; }
+.neo-page .matrix__column:nth-child(4) { left: 85%; animation-delay: -1s; }
+
+.neo-page .matrix h1,
+.neo-page .matrix__greeting {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 12px #00ff41;
+}
+
+@keyframes matrix-fall {
+    to { transform: translateY(200vh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .neo-page .matrix__column { animation: none; }
+}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<section class="login">
+    <h1 class="login__title">Вход на сайт</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="login__errors">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form class="login-form" method="post">
+        <div class="form-field">
+            <label for="username">Логин</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div class="form-field">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <button class="login-form__button" type="submit">Войти</button>
+    </form>
+</section>
+{% endblock %}
