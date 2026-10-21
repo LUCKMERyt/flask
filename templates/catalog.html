@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог{% endblock %}
+
+{% block content %}
+<section class="catalog">
+    <h1 class="catalog__title">Категории и товары</h1>
+
+    <div class="catalog__settings">
+        <label for="popup-toggle" class="open-button">Настройки</label>
+    </div>
+
+    <div class="catalog__tables">
+        <section class="catalog__section">
+            <h2 class="catalog__heading">Таблица категорий</h2>
+
+            <div class="table-wrapper">
+                <table class="catalog-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название категории</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.id }}</td>
+                            <td>
+                                <a href="{{ url_for('catalog', category_id=category.id) }}">
+                                    {{ category.name }}
+                                </a>
+                                {% if selected_category_id == category.id %}
+                                    <span class="category-check">✓</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2">Категорий пока нет</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="catalog__all-products">
+                <a href="{{ url_for('catalog') }}">Показать все товары</a>
+            </p>
+        </section>
+
+        <section class="catalog__section">
+            <h2 class="catalog__heading">Таблица товаров</h2>
+
+            <div class="table-wrapper">
+                <table class="catalog-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название товара</th>
+                            <th>Цена</th>
+                            <th>Категория</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.price }}</td>
+                            <td>
+                                {{ product.category.name if product.category else "Без категории" }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">Товаров в этой категории пока нет</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            
+        </section>
+    </div>
+</section>
+
+<input type="checkbox" id="popup-toggle" class="popup-toggle">
+
+<div class="popup">
+    <label for="popup-toggle" class="popup-overlay" aria-label="Закрыть окно"></label>
+
+    <div class="popup-content">
+        <label for="popup-toggle" class="close-button" aria-label="Закрыть">×</label>
+
+        <h2>Настройки каталога</h2>
+
+        <h3>Добавить категорию</h3>
+        <form action="{{ url_for('add_category') }}" method="POST">
+            <input
+                type="text"
+                name="name"
+                placeholder="Название категории"
+                required
+            >
+            <button type="submit">Добавить категорию</button>
+        </form>
+
+        <h3>Добавить товар</h3>
+        <form action="{{ url_for('add_product') }}" method="POST">
+            <input
+                type="text"
+                name="name"
+                placeholder="Название товара"
+                required
+            >
+
+            <input
+                type="number"
+                name="price"
+                placeholder="Цена"
+                min="0"
+                step="0.01"
+                required
+            >
+
+            <select name="category_id" required>
+                <option value="">Выберите категорию</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">Добавить товар</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

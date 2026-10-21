@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Таблица{% endblock %}
+
+{% block content %}
+
+<h1>Данные из таблицы test_db</h1>
+
+<h2>Добавить запись</h2>
+<form action="{{ url_for('add_record') }}" method="POST">
+    <label for="name">Имя:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="age">Возраст:</label>
+    <input type="number" id="age" name="age" min="0" required>
+
+    <button type="submit">Добавить</button>
+</form>
+
+{% if rows %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Возраст</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.age }}</td>
+            <td>
+                <form action="{{ url_for('update_record', id=row.id) }}" method="POST">
+                    <input type="text" name="name" value="{{ row.name }}" required>
+                    <input type="number" name="age" value="{{ row.age }}" min="0" required>
+                    <button type="submit">Изменить</button>
+                </form>
+
+                <form action="{{ url_for('delete_record', id=row.id) }}" method="POST">
+                    <button type="submit"
+                            onclick="return confirm('Удалить эту запись?')">
+                        Удалить
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>В таблице пока нет записей.</p>
+{% endif %}
+
+{% endblock %}
