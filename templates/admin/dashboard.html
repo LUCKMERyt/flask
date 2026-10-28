@@ -1,0 +1,53 @@
+{% extends "admin_base.html" %}
+{% block title %}Дашборд{% endblock %}
+{% block header %}Обзор системы{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Карточка с умной аналитикой -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Новых пользователей сегодня</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ users_today }}</h3>
+            </div>
+            <div class="p-2 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-user-plus"></i></div>
+        </div>
+        <!-- Индикатор тренда -->
+        <div class="mt-4 flex items-center text-sm">
+            {% if users_diff > 0 %}
+                <span class="text-green-600 font-semibold flex items-center"><i class="fas fa-arrow-up mr-1"></i> {{ users_diff }}</span>
+                <span class="text-gray-500 ml-2">к вчера ({{ users_pct }}%)</span>
+            {% elif users_diff < 0 %}
+                <span class="text-red-600 font-semibold flex items-center"><i class="fas fa-arrow-down mr-1"></i> {{ users_diff|abs }}</span>
+                <span class="text-gray-500 ml-2">к вчера ({{ users_pct }}%)</span>
+            {% else %}
+                <span class="text-gray-500">Без изменений</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Аналогичные карточки для total_products и т.д. -->
+</div>
+
+<!-- Таблица последней активности -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800">Последние добавленные товары</h3>
+    </div>
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+            <tr><th class="px-6 py-3">Название</th><th class="px-6 py-3">Цена</th><th class="px-6 py-3">Категория</th></tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for p in recent_products %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4 font-medium">{{ p.name }}</td>
+                <td class="px-6 py-4">{{ p.price }} ₽</td>
+                <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">{{ p.category.name }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
