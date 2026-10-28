@@ -24,9 +24,18 @@
                 <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
             <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg bg-blue-600 text-white transition"><i class="fas fa-home w-6"></i> Дашборд</a>
-                <a href="{{ url_for('admin.dashboard') }}#products" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-box w-6"></i> Товары</a>
-                <a href="/" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-arrow-left w-6"></i> На сайт</a>
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg bg-blue-600 text-white transition">
+                    <i class="fas fa-home w-6"></i> Дашборд
+                </a>
+                <a href="{{ url_for('admin.products_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
+                    <i class="fas fa-box w-6"></i> Товары
+                </a>
+                <a href="{{ url_for('admin.categories_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
+                    <i class="fas fa-tags w-6"></i> Категории
+                </a>
+                <a href="/" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
+                    <i class="fas fa-arrow-left w-6"></i> На сайт
+                </a>
             </nav>
         </aside>
 

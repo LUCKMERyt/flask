@@ -1,8 +1,9 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 from flask_migrate import Migrate
 from sqlalchemy import text
-from models import db, User, TestDB, Category, Product
+from models import db, User, TestDB, Category, Product, PageView
 from admin import admin_bp
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
@@ -13,7 +14,14 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# Проверка подключения
+# Функция записи посещения
+def log_visit(page_name):
+    try:
+        db.session.add(PageView(page=page_name, ip=request.remote_addr))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 with app.app_context():
     try:
         db.session.execute(text("SELECT 1"))
@@ -21,14 +29,14 @@ with app.app_context():
     except Exception as e:
         print(f"\033[1;3;4;91m Ошибка подключения: {e}\033[0m")
 
-# ==================== ОСНОВНЫЕ МАРШРУТЫ ====================
-
 @app.route("/")
 def home():
+    log_visit("home")
     return render_template("index.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    log_visit("login")
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -44,6 +52,7 @@ def user_profile(username, user_id):
 
 @app.route("/about")
 def about():
+    log_visit("about")
     return render_template("about.html")
 
 @app.route("/neo")
@@ -54,10 +63,9 @@ def neo():
 def comm():
     return render_template("comm.html")
 
-# ==================== TEST_DB CRUD ====================
-
 @app.route("/test_db")
 def test_db():
+    log_visit("test_db")
     rows = TestDB.query.order_by(TestDB.id).all()
     return render_template("test_db.html", rows=rows)
 
@@ -94,10 +102,9 @@ def delete_record(id):
     db.session.commit()
     return redirect(url_for("test_db"))
 
-# ==================== КАТАЛОГ ====================
-
 @app.route("/catalog")
 def catalog():
+    log_visit("catalog")
     categories = Category.query.order_by(Category.name).all()
     category_id = request.args.get("category_id", type=int)
     query = Product.query.order_by(Product.id)
@@ -133,8 +140,6 @@ def add_product():
     db.session.add(Product(name=name, price=price, category=category))
     db.session.commit()
     return redirect(url_for("catalog"))
-
-# ==================== РЕГИСТРАЦИЯ АДМИН-BLUEPRINT ====================
 
 app.register_blueprint(admin_bp)
 

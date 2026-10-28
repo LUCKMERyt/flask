@@ -1,4 +1,3 @@
-# models.py
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -48,3 +47,12 @@ class Product(db.Model):
     )
 
     category = db.relationship("Category", back_populates="products")
+
+
+# НОВАЯ МОДЕЛЬ — для отслеживания посещений сайта
+class PageView(db.Model):
+    __tablename__ = "page_views"
+    id = db.Column(db.Integer, primary_key=True)
+    visited_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    page = db.Column(db.String(100), default="unknown")
+    ip = db.Column(db.String(50))

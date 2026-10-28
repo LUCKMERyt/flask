@@ -58,11 +58,14 @@
     </div>
 </div>
 
-<!-- 2. График активности -->
+<!-- 2. График регистраций -->
 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-    <h3 class="font-bold text-gray-800 mb-4">Динамика добавления товаров (последние 7 дней)</h3>
+    <h3 class="font-bold text-gray-800 mb-4">
+        <i class="fas fa-user-plus text-blue-500 mr-2"></i>
+        Динамика регистраций новых пользователей (последние 7 дней)
+    </h3>
     <div class="relative h-64 w-full">
-        <canvas id="activityChart"></canvas>
+        <canvas id="visitsChart"></canvas>
     </div>
 </div>
 
@@ -159,24 +162,27 @@
     </div>
 </div>
 
-<!-- 6. Скрипт для Chart.js -->
+<!-- 6. Скрипт для Chart.js (Чистый, без дубликатов) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('activityChart').getContext('2d');
+    const ctx = document.getElementById('visitsChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+            labels: {{ visits_labels | tojson }},
             datasets: [{
-                label: 'Добавлено товаров',
-                data: [2, 5, 1, 8, 4, 6, 3], // Замените на реальные данные из Python при необходимости
+                label: 'Новых пользователей',
+                data: {{ visits_data | tojson }},
                 borderColor: 'rgb(37, 99, 235)',
                 backgroundColor: 'rgba(37, 99, 235, 0.1)',
                 borderWidth: 2,
-                tension: 0.4,
+                tension: 0.3,
                 fill: true,
-                pointBackgroundColor: 'rgb(37, 99, 235)',
-                pointRadius: 4
+                pointBackgroundColor: '#fff',
+                pointBorderColor: 'rgb(37, 99, 235)',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: {
@@ -185,19 +191,28 @@
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    padding: 12,
-                    cornerRadius: 8
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleFont: { size: 13 },
+                    bodyFont: { size: 13 },
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'Регистраций: ' + context.parsed.y;
+                        }
+                    }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    ticks: { stepSize: 1 }
+                    grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+                    ticks: { stepSize: 1, font: { size: 11 } }
                 },
                 x: {
-                    grid: { display: false }
+                    grid: { display: false, drawBorder: false },
+                    ticks: { font: { size: 11 } }
                 }
             }
         }
