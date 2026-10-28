@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Мой личный сайт{% endblock %}</title>
-    <link rel="stylesheet"href="{{ url_for('static', filename='custom.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
@@ -26,5 +26,45 @@
     <main class="page-content">
         {% block content %}{% endblock %}
     </main>
+
+
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div class="site-footer__about">
+                <a class="site-footer__brand" href="/"> shishacorparation</a>
+                <p> </p>
+            </div>
+
+    <div class="site-footer__links">
+        <div class="site-footer__row">
+            <a href="/">Главная</a>
+            <a href="{{ url_for('about') }}">Обо мне</a>
+            <a href="{{ url_for('catalog') }}">Каталог</a>
+            <a href="{{ url_for('comm') }}">Отзывы</a>
+            <a href="{{ url_for('neo') }}">Матрица</a>
+            <a href="{{ url_for('login') }}">Войти</a>
+        </div>
+
+            
+        <div class="site-footer__row">
+            <a href="#">Мои проекты</a>
+            <a href="#">Интересы</a>
+            <a href="#">Галерея</a>
+            <a href="#">Новости</a>
+            <a href="#">Полезное</a>
+            <a href="#">Контакты</a>
+        </div>
+
+        <div class="site-footer__row">
+            <a href="#">Сотрудничество</a>
+            <a href="#">Частые вопросы</a>
+            <a href="#">Обратная связь</a>
+            <a href="#">Правила сайта</a>
+            <a href="#">Карта сайта</a>
+            <a href="#">Конфиденциальность</a>
+            
+        </div>
+    </div>
 </body>
 </html>

@@ -108,6 +108,10 @@ def neo():
 def comm():
     return render_template("comm.html")
 
+@app.route("/admiko")
+def comm():
+    return render_template("adminko.html")
+
 #! ------------------test_db------------------------------
 
 @app.route("/test_db")

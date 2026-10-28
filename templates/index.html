@@ -4,6 +4,26 @@
 
 {% block content %}
 <section class="home">
-    <h1>Это главная страница.</h1>
+    <div class="home__content">
+        <p class="home__eyebrow">ЛИЧНЫЙ САЙТ</p>
+        <h1 class="home__title">Привет!<br>Рад видеть тебя здесь.</h1>
+        <p class="home__text">
+            Это моё пространство в интернете: здесь можно узнать обо мне,
+            посмотреть мои проекты и связаться со мной.
+        </p>
+
+        <div class="home__actions">
+            <a class="home__button" href="{{ url_for('about') }}">Обо мне</a>
+            <a class="home__link" href="{{ url_for('catalog') }}">Посмотреть каталог <span aria-hidden="true">→</span></a>
+        </div>
+    </div>
+
+    <div class="home__visual" aria-hidden="true">
+        <div class="home__orbit home__orbit--outer"></div>
+        <div class="home__orbit home__orbit--inner"></div>
+        <div class="home__symbol">&lt;/&gt;</div>
+        <span class="home__spark home__spark--one">✳</span>
+        <span class="home__spark home__spark--two">+</span>
+    </div>
 </section>
 {% endblock %}
