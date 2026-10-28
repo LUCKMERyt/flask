@@ -3,61 +3,85 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import text
 
+# --- НОВЫЕ ИМПОРТЫ ДЛЯ АДМИНКИ И АВТОРИЗАЦИИ ---
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from werkzeug.security import generate_password_hash, check_password_hash
+
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+pymysql://myuser:1234@127.0.0.1:3306/myapp"
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://myuser:1234@127.0.0.1:3306/myapp"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = "super-secret-key-change-me-in-production"  # <-- НОВОЕ (обязательно для сессий)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# --- ИНИЦИАЛИЗАЦИЯ FLASK-LOGIN ---
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
-# Модель — описание таблицы пользователей
-class User(db.Model):
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
+
+# --- ОБНОВЛЁННАЯ МОДЕЛЬ USER ---
+class User(UserMixin, db.Model):  # <-- ДОБАВЛЕНО: UserMixin
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)  # <-- НОВОЕ: флаг администратора
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f"<User {self.username}>"
 
+# --- ОСТАЛЬНЫЕ МОДЕЛИ (оставляем как у вас было) ---
 class TestDB(db.Model):
     __tablename__ = "test_db"
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     age = db.Column(db.Integer)
 
-
 class Category(db.Model):
     __tablename__ = "categories"
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-
-    products = db.relationship(
-        "Product",
-        back_populates="category",
-        cascade="all, delete-orphan"
-    )
-
+    products = db.relationship("Product", back_populates="category", cascade="all, delete-orphan")
 
 class Product(db.Model):
     __tablename__ = "products"
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-
-    category_id = db.Column(
-        db.Integer,
-        db.ForeignKey("categories.id"),
-        nullable=False
-    )
-
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
     category = db.relationship("Category", back_populates="products")
+
+
+# --- НАСТРОЙКА FLASK-ADMIN ---
+class AdminModelView(ModelView):
+    """Защищает страницы админки: доступ только для авторизованных админов"""
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.is_admin
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
+# Инициализация админ-панели
+admin = Admin(app, name='Панель управления')
+
+# Добавляем ваши модели в админку
+admin.add_view(AdminModelView(User, db.session, name='Пользователи'))
+admin.add_view(AdminModelView(TestDB, db.session, name='TestDB'))
+admin.add_view(AdminModelView(Category, db.session, name='Категории'))
+admin.add_view(AdminModelView(Product, db.session, name='Товары'))
 
 
 with app.app_context():
@@ -72,18 +96,31 @@ with app.app_context():
 def home():
     return render_template("index.html")
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # Если уже вошёл, сразу кидаем в админку
+    if current_user.is_authenticated:
+        return redirect(url_for('admin.index'))
+        
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
-        # Здесь позже нужно найти пользователя в базе
-        # и безопасно проверить пароль.
-        return "Вы вошли в систему!"
+        user = User.query.filter_by(username=username).first()
+        # <-- НОВОЕ: реальная проверка пароля через хэш
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('admin.index'))
+            
+        return "Неверный логин или пароль", 401
 
     return render_template("login.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
 
 
 @app.route("/user/<username>-<int:user_id>")
@@ -108,9 +145,6 @@ def neo():
 def comm():
     return render_template("comm.html")
 
-@app.route("/admiko")
-def comm():
-    return render_template("adminko.html")
 
 #! ------------------test_db------------------------------
 
@@ -163,7 +197,7 @@ def delete_record(id):
 
 
 
-#! -----------------atalog--------------------
+#! -----------------catalog--------------------
 
 @app.route("/catalog")
 def catalog():
