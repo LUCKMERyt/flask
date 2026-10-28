@@ -73,10 +73,13 @@ def test_db():
 def add_record():
     name = request.form.get("name", "").strip()
     age = request.form.get("age", type=int)
+
     if not name or age is None or age < 0:
-        return "Введите корректные имя и возраст", 400
-    db.session.add(TestDB(name=name, age=age))
-    db.session.commit()
+        flash("Введите корректные имя и возраст", "error")
+        return redirect(url_for("test_db"))
+    
+    # ... добавление в БД
+    flash("Запись успешно добавлена!", "success")
     return redirect(url_for("test_db"))
 
 @app.route("/update/<int:id>", methods=["POST"])
