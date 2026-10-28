@@ -1,7 +1,8 @@
+from models import db, Product, Category, User, TestDB
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app import db, Product, Category, User, TestDB
 from datetime import datetime, timedelta
 from sqlalchemy import func
+
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
