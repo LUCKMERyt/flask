@@ -6,38 +6,66 @@
     <title>{% block title %}Админ-панель{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800">
     <div class="flex h-screen overflow-hidden">
-        <!-- Сайдбар -->
-        <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex">
-            <div class="h-16 flex items-center justify-center border-b border-slate-700">
+        
+        <!-- Мобильный оверлей -->
+        <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+
+        <!-- Боковая панель -->
+        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col fixed md:static h-full transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-30">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-slate-700">
                 <h1 class="text-xl font-bold"><i class="fas fa-shield-alt mr-2 text-blue-400"></i>ADMIN</h1>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 transition"><i class="fas fa-home w-6"></i> Дашборд</a>
-                <a href="{{ url_for('admin.products_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 transition"><i class="fas fa-box w-6"></i> Товары</a>
-                <a href="{{ url_for('admin.users_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 transition"><i class="fas fa-users w-6"></i> Пользователи</a>
-                <a href="/" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 transition text-slate-400"><i class="fas fa-arrow-left w-6"></i> На сайт</a>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg bg-blue-600 text-white transition"><i class="fas fa-home w-6"></i> Дашборд</a>
+                <a href="{{ url_for('admin.dashboard') }}#products" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-box w-6"></i> Товары</a>
+                <a href="/" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-arrow-left w-6"></i> На сайт</a>
             </nav>
         </aside>
 
         <!-- Основной контент -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white border-b flex items-center justify-between px-8 shadow-sm">
-                <h2 class="text-xl font-semibold">{% block header %}Панель управления{% endblock %}</h2>
+        <div class="flex-1 flex flex-col overflow-hidden w-full">
+            <!-- Шапка -->
+            <header class="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm">
+                <div class="flex items-center">
+                    <button onclick="toggleSidebar()" class="md:hidden mr-4 text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold">{% block header %}Панель управления{% endblock %}</h2>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">A</div>
+                </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto p-8">
-                <!-- БЛОК УВЕДОМЛЕНИЙ (UX/UI) -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-8">
+                <!-- Flash-уведомления -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="mb-4 p-4 rounded-lg flex items-center {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200{% else %}bg-red-100 text-red-800 border border-red-200{% endif %}">
-                                <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-2"></i>
-                                {{ message }}
-                            </div>
-                        {% endfor %}
+                        <div class="mb-6 space-y-3">
+                            {% for category, message in messages %}
+                                <div class="p-4 rounded-lg flex items-center shadow-sm {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+                                    <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-3 text-lg"></i>
+                                    <span class="flex-1">{{ message }}</span>
+                                    <button onclick="this.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                            <!-- Скрипт для авто-скрытия через 5 секунд -->
+                            <script>
+                                setTimeout(() => {
+                                    document.querySelectorAll('.fa-times').forEach(btn => btn.parentElement.parentElement.remove());
+                                }, 5000);
+                            </script.>
+                        </div>
                     {% endif %}
                 {% endwith %}
 
@@ -45,5 +73,14 @@
             </main>
         </div>
     </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>
