@@ -1,10 +1,111 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import stars, pagination_nav with context %}
 
-{% block title %}Отзыв{% endblock %}
+{% block title %}Отзывы{% endblock %}
 
 {% block content %}
 <section class="comm">
-    <h1>Оставьте отзыв</h1>
-    <input type="text" id="" name="" required>
+    <header class="page-head reveal">
+        <p class="eyebrow"><span class="eyebrow__dot"></span> Обратная связь</p>
+        <h1 class="page-head__title">Отзывы</h1>
+        <p class="page-head__lead">Оцените сайт и поделитесь впечатлением — это помогает мне делать его лучше.</p>
+    </header>
+
+    {% if not table_ready %}
+    <div class="notice notice--warning reveal">
+        {{ icon('alert', 20) }}
+        <div>
+            <strong>Таблица отзывов ещё не создана.</strong>
+            Выполните в папке проекта <code>flask db upgrade</code> и перезапустите сайт.
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="comm__layout">
+        <div class="comm__main">
+            <form class="card review-form reveal" method="post" action="{{ url_for('comm') }}" id="review-form">
+                {{ csrf_input() }}
+                <h2 class="card__title">Оставьте отзыв</h2>
+
+                <div class="field">
+                    <label for="review-name">Ваше имя</label>
+                    <input type="text" id="review-name" name="name" value="{{ form.name }}" minlength="2" maxlength="60" required>
+                </div>
+
+                <fieldset class="field rating-field">
+                    <legend>Оценка</legend>
+                    <div class="stars-input">
+                        {% for i in [5, 4, 3, 2, 1] %}
+                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if form.rating == i %}checked{% endif %} required>
+                        <label for="star{{ i }}" title="{{ i }} из 5">★<span class="sr-only">{{ i }} из 5</span></label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div class="field">
+                    <label for="review-text">Отзыв</label>
+                    <textarea id="review-text" name="text" rows="5" minlength="5" maxlength="1000"
+                              placeholder="Что понравилось, что можно улучшить?" required>{{ form.text }}</textarea>
+                    <small class="field__hint"><span id="review-counter">{{ form.text|length }}</span> / 1000</small>
+                </div>
+
+                {# honeypot — скрыто от людей, боты его заполняют #}
+                <div class="hp" aria-hidden="true">
+                    <label>Сайт <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+
+                <button class="btn btn--primary" type="submit">Отправить отзыв</button>
+            </form>
+
+            <div class="reviews">
+                {% if pagination and pagination.items %}
+                {% for review in pagination.items %}
+                <article class="review card reveal">
+                    <header class="review__head">
+                        <span class="review__avatar">{{ review.name[:1]|upper }}</span>
+                        <div>
+                            <strong class="review__name">{{ review.name }}</strong>
+                            <time class="review__date" datetime="{{ review.created_at.isoformat() if review.created_at else '' }}">{{ review.created_at|dt('%d.%m.%Y') }}</time>
+                        </div>
+                        <div class="review__rating">{{ stars(review.rating) }}</div>
+                    </header>
+                    <p class="review__text">{{ review.text }}</p>
+                </article>
+                {% endfor %}
+                {{ pagination_nav(pagination) }}
+                {% elif table_ready %}
+                <div class="empty-state card reveal">
+                    <span class="empty-state__icon">{{ icon('message', 32) }}</span>
+                    <h2>Пока нет отзывов</h2>
+                    <p class="muted">Станьте первым — форма выше.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <aside class="comm__side">
+            <div class="card summary reveal">
+                <h2 class="card__title">Рейтинг сайта</h2>
+                <div class="summary__score">
+                    <span class="summary__value">{{ '%.1f'|format(summary.average) if summary.count else '—' }}</span>
+                    <div>
+                        {{ stars(summary.average|round|int) }}
+                        <p class="muted summary__count">{{ summary.count }} {{ ru_plural(summary.count, 'отзыв', 'отзыва', 'отзывов') }}</p>
+                    </div>
+                </div>
+                <ul class="bars">
+                    {% for i in [5, 4, 3, 2, 1] %}
+                    {% set cnt = summary.distribution[i] %}
+                    <li class="bars__row">
+                        <span>{{ i }} ★</span>
+                        <span class="bars__track"><span class="bars__fill" style="width: {{ (cnt / summary.count * 100)|round|int if summary.count else 0 }}%"></span></span>
+                        <span class="bars__num">{{ cnt }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+    </div>
 </section>
 {% endblock %}

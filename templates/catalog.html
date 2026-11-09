@@ -1,139 +1,195 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_card, pagination_nav with context %}
 
 {% block title %}Каталог{% endblock %}
 
 {% block content %}
 <section class="catalog">
-    <h1 class="catalog__title">Категории и товары</h1>
-
-    <div class="catalog__settings">
-        <label for="popup-toggle" class="open-button">Настройки</label>
-    </div>
-
-    <div class="catalog__tables">
-        <section class="catalog__section">
-            <h2 class="catalog__heaйцding">Таблица категорий</h2>
-
-            <div class="table-wrapper">
-                <table class="catalog-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Название категории</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for category in categories %}
-                        <tr>
-                            <td>{{ category.id }}</td>
-                            <td>
-                                <a href="{{ url_for('catalog', category_id=category.id) }}">
-                                    {{ category.name }}
-                                </a>
-                                {% if selected_category_id == category.id %}
-                                    <span class="category-check">✓</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="2">Категорий пока нет</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <p class="catalog__all-products">
-                <a href="{{ url_for('catalog') }}">Показать все товары</a>
+    <header class="catalog__head reveal">
+        <div>
+            <h1 class="catalog__title">Категории и товары</h1>
+            <p class="muted">
+                {% if has_filters %}
+                    Найдено: <strong>{{ pagination.total }}</strong> из {{ total_products }}
+                {% else %}
+                    Всего {{ total_products }} {{ ru_plural(total_products, 'товар', 'товара', 'товаров') }}
+                    в {{ categories|length }} {{ ru_plural(categories|length, 'категории', 'категориях', 'категориях') }}
+                {% endif %}
             </p>
-        </section>
+        </div>
+        <div class="catalog__settings">
+            <div class="segmented" role="group" aria-label="Вид списка" id="view-toggle">
+                <button type="button" data-view="grid" class="is-active" aria-label="Карточки" title="Карточки">{{ icon('grid', 18) }}</button>
+                <button type="button" data-view="table" aria-label="Таблица" title="Таблица">{{ icon('list', 18) }}</button>
+            </div>
+            {% if is_admin() %}
+            <button type="button" class="btn btn--ghost open-button" data-open-dialog="catalog-settings">
+                {{ icon('sliders', 16) }} Настройки
+            </button>
+            {% endif %}
+        </div>
+    </header>
 
-        <section class="catalog__section">
-            <h2 class="catalog__heading">Таблица товаров</h2>
+    <div class="catalog__layout">
+        <aside class="catalog__sidebar reveal" aria-label="Фильтры">
+            <form class="filters card" method="get" action="{{ url_for('catalog') }}" id="filters-form">
+                <div class="field field--search">
+                    <label for="q" class="sr-only">Поиск</label>
+                    {{ icon('search', 18, 'field__icon') }}
+                    <input type="search" id="q" name="q" value="{{ q }}" placeholder="Поиск товаров…"
+                           autocomplete="off" aria-controls="suggest-list"
+                           data-suggest-url="{{ url_for('api_suggest') }}">
+                    <ul class="suggest" id="suggest-list" hidden></ul>
+                </div>
 
-            <div class="table-wrapper">
-                <table class="catalog-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Название товара</th>
-                            <th>Цена</th>
-                            <th>Категория</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr>
-                            <td>{{ product.id }}</td>
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.price }}</td>
-                            <td>
-                                {{ product.category.name if product.category else "Без категории" }}
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4">Товаров в этой категории пока нет</td>
-                        </tr>
+                {% if selected_category_id is not none %}
+                <input type="hidden" name="category_id" value="{{ selected_category_id }}">
+                {% endif %}
+
+                <div class="field">
+                    <label>Цена, ₽</label>
+                    <div class="field__range">
+                        <input type="number" name="min_price" min="0" step="any" inputmode="decimal"
+                               value="{{ min_price if min_price is not none else '' }}"
+                               placeholder="{{ price_bounds[0]|int if price_bounds[0] is not none else 'от' }}" aria-label="Цена от">
+                        <span>—</span>
+                        <input type="number" name="max_price" min="0" step="any" inputmode="decimal"
+                               value="{{ max_price if max_price is not none else '' }}"
+                               placeholder="{{ price_bounds[1]|int if price_bounds[1] is not none else 'до' }}" aria-label="Цена до">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="sort">Сортировка</label>
+                    <select id="sort" name="sort" data-autosubmit>
+                        {% for key, (label, _) in sorts.items() %}
+                        <option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
-                    </tbody>
-                </table>
+                    </select>
+                </div>
+
+                <div class="filters__actions">
+                    <button type="submit" class="btn btn--primary btn--sm">Применить</button>
+                    {% if has_filters or sort != 'new' %}
+                    <a class="btn btn--ghost btn--sm" href="{{ url_for('catalog') }}">Сбросить</a>
+                    {% endif %}
+                </div>
+            </form>
+
+            <section class="card catalog__section">
+                <h2 class="catalog__heading">Категории</h2>
+                <ul class="category-list">
+                    <li>
+                        <a href="{{ url_with(category_id=None, page=None) }}"
+                           class="category-list__item{% if selected_category_id is none %} is-active{% endif %}">
+                            <span>Все товары</span><span class="category-list__count">{{ total_products }}</span>
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                    <li>
+                        <a href="{{ url_with(category_id=category.id, page=None) }}"
+                           class="category-list__item{% if selected_category_id == category.id %} is-active{% endif %}">
+                            <span>{{ category.name }}{% if selected_category_id == category.id %} <span class="category-check">✓</span>{% endif %}</span>
+                            <span class="category-list__count">{{ category_counts.get(category.id, 0) }}</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="muted category-list__empty">Категорий пока нет</li>
+                    {% endfor %}
+                </ul>
+                <p class="catalog__all-products">
+                    <a href="{{ url_for('catalog') }}">Показать все товары</a>
+                </p>
+            </section>
+        </aside>
+
+        <div class="catalog__results" id="catalog-results" data-view="grid">
+            {% if has_filters %}
+            <div class="active-filters" aria-label="Активные фильтры">
+                {% if q %}<a class="chip-link" href="{{ url_with(q=None, page=None) }}">«{{ q }}» {{ icon('x', 14) }}</a>{% endif %}
+                {% if selected_category %}<a class="chip-link" href="{{ url_with(category_id=None, page=None) }}">{{ selected_category.name }} {{ icon('x', 14) }}</a>{% endif %}
+                {% if min_price is not none %}<a class="chip-link" href="{{ url_with(min_price=None, page=None) }}">от {{ min_price|int }} ₽ {{ icon('x', 14) }}</a>{% endif %}
+                {% if max_price is not none %}<a class="chip-link" href="{{ url_with(max_price=None, page=None) }}">до {{ max_price|int }} ₽ {{ icon('x', 14) }}</a>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if products %}
+            <div class="view view--grid">
+                <div class="grid grid--3">
+                    {% for product in products %}{{ product_card(product) }}{% endfor %}
+                </div>
             </div>
 
-            
-        </section>
+            <div class="view view--table">
+                <h2 class="catalog__heading">Таблица товаров</h2>
+                <div class="table-wrapper">
+                    <table class="catalog-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название товара</th>
+                                <th>Цена</th>
+                                <th>Категория</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ product.id }}</td>
+                                <td>{{ product.name }}</td>
+                                <td class="nowrap">{{ product.price|rub }}</td>
+                                <td>{{ product.category.name if product.category else "Без категории" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{ pagination_nav(pagination) }}
+            {% else %}
+            <div class="empty-state card">
+                <span class="empty-state__icon">{{ icon('search', 32) }}</span>
+                <h2>{% if has_filters %}Ничего не найдено{% else %}Товаров пока нет{% endif %}</h2>
+                <p class="muted">
+                    {% if has_filters %}Попробуйте изменить запрос или сбросить фильтры.
+                    {% else %}Как только товары появятся, они будут здесь.{% endif %}
+                </p>
+                {% if has_filters %}<a class="btn btn--primary btn--sm" href="{{ url_for('catalog') }}">Сбросить фильтры</a>{% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
 </section>
 
-<input type="checkbox" id="popup-toggle" class="popup-toggle">
-
-<div class="popup">
-    <label for="popup-toggle" class="popup-overlay" aria-label="Закрыть окно"></label>
-
-    <div class="popup-content">
-        <label for="popup-toggle" class="close-button" aria-label="Закрыть">×</label>
-
-        <h2>Настройки каталога</h2>
-
-        <h3>Добавить категорию</h3>
-        <form action="{{ url_for('add_category') }}" method="POST">
-            <input
-                type="text"
-                name="name"
-                placeholder="Название категории"
-                required
-            >
-            <button type="submit">Добавить категорию</button>
-        </form>
-
-        <h3>Добавить товар</h3>
-        <form action="{{ url_for('add_product') }}" method="POST">
-            <input
-                type="text"
-                name="name"
-                placeholder="Название товара"
-                required
-            >
-
-            <input
-                type="number"
-                name="price"
-                placeholder="Цена"
-                min="0"
-                step="0.01"
-                required
-            >
-
-            <select name="category_id" required>
-                <option value="">Выберите категорию</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
-                {% endfor %}
-            </select>
-
-            <button type="submit">Добавить товар</button>
-        </form>
+{% if is_admin() %}
+<dialog class="dialog popup-content" id="catalog-settings" aria-labelledby="catalog-settings-title">
+    <div class="dialog__head">
+        <h2 id="catalog-settings-title">Настройки каталога</h2>
+        <button type="button" class="icon-btn" data-close-dialog aria-label="Закрыть">{{ icon('x', 20) }}</button>
     </div>
-</div>
+
+    <h3>Добавить категорию</h3>
+    <form class="form" action="{{ url_for('add_category') }}" method="post">
+        {{ csrf_input() }}
+        <input type="text" name="name" placeholder="Название категории" maxlength="100" required>
+        <button type="submit" class="btn btn--primary">Добавить категорию</button>
+    </form>
+
+    <h3>Добавить товар</h3>
+    <form class="form" action="{{ url_for('add_product') }}" method="post">
+        {{ csrf_input() }}
+        <input type="text" name="name" placeholder="Название товара" maxlength="150" required>
+        <input type="number" name="price" placeholder="Цена" min="0" step="0.01" required>
+        <select name="category_id" required>
+            <option value="">Выберите категорию</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn--primary">Добавить товар</button>
+    </form>
+</dialog>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,54 @@
+{% extends "admin_base.html" %}
+{% from "admin/_macros.html" import pager, empty_row, stars with context %}
+{% block title %}Отзывы{% endblock %}
+{% block header %}Отзывы посетителей{% endblock %}
+
+{% block content %}
+{% if not table_ready %}
+<div class="mb-6 p-4 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 flex items-start">
+    <i class="fas fa-exclamation-triangle mr-3 mt-1"></i>
+    <div>
+        <strong>Таблица отзывов ещё не создана.</strong>
+        Выполните <code>flask db upgrade</code> в папке проекта и обновите страницу.
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
+                <tr>
+                    <th class="px-6 py-3">Автор</th>
+                    <th class="px-6 py-3">Оценка</th>
+                    <th class="px-6 py-3">Отзыв</th>
+                    <th class="px-6 py-3">Дата</th>
+                    <th class="px-6 py-3 text-right">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for r in pagination.items %}
+                <tr class="hover:bg-gray-50 transition align-top">
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ r.name }}</td>
+                    <td class="px-6 py-4">{{ stars(r.rating) }}</td>
+                    <td class="px-6 py-4 text-gray-700 text-sm max-w-md break-words">{{ r.text }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">{{ r.created_at|dt }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <form method="POST" action="{{ url_for('admin.review_delete', id=r.id) }}" class="inline">
+                            {{ csrf_input() }}
+                            <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Удалить"
+                                    data-confirm="Удалить отзыв от {{ r.name }}?">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                {{ empty_row(5, 'fa-comments', 'Отзывов пока нет') }}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {{ pager(pagination) }}
+</div>
+{% endif %}
+{% endblock %}

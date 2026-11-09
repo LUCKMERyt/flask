@@ -1,70 +1,138 @@
+{% from "_icons.html" import icon %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block description %}Личный сайт: обо мне, каталог товаров, отзывы посетителей.{% endblock %}">
+    <meta name="theme-color" content="#0a0a0a">
     <title>{% block title %}Мой личный сайт{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff8a00'/%3E%3Ctext x='32' y='42' font-family='monospace' font-size='28' font-weight='700' text-anchor='middle' fill='%230a0a0a'%3E%3C/%3E%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+
+    {# Тема применяется до отрисовки, чтобы не было «вспышки». Класс js включает анимации;
+       если app.js не загрузился — через 3 с блоки показываются без анимации. #}
+    <script>
+        (function () {
+            var root = document.documentElement;
+            try {
+                root.dataset.theme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+            } catch (e) {}
+            root.classList.add('js');
+            setTimeout(function () { if (!window.__appReady) root.classList.remove('js'); }, 3000);
+        })();
+    </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
-    <header class="site-header">
-        <nav class="navigation">
-            <a class="site-name" href="/">Мой сайт</a>
+    <a class="skip-link" href="#main">Перейти к содержимому</a>
 
-            <div class="navigation__links">
-                <a href="/">Главная</a>
-                <a href="{{ url_for('about') }}">Обо мне</a>
-                <a href="{{ url_for('login') }}">Войти</a>
-                <a href="{{ url_for('neo') }}">Матрица</a>
-                <a href="{{ url_for('comm') }}">Отзывы</a>
-                <a href="{{ url_for('test_db') }}">bd</a>
-                <a href="{{ url_for('catalog') }}">Каталог</a>
+    <header class="site-header" id="site-header">
+        <nav class="navigation" aria-label="Основная навигация">
+            <a class="site-name" href="{{ url_for('home') }}">
+                <span class="site-name__mark" aria-hidden="true">&lt;/&gt;</span>
+                <span>Мой сайт</span>
+            </a>
+
+            <button class="icon-btn nav-toggle" type="button" id="nav-toggle"
+                    aria-label="Открыть меню" aria-expanded="false" aria-controls="nav-panel">
+                {{ icon('menu', 22) }}
+            </button>
+
+            <div class="navigation__panel" id="nav-panel">
+                <div class="navigation__links">
+                    {% set nav = [
+                        ('home', 'Главная'),
+                        ('about', 'Обо мне'),
+                        ('catalog', 'Каталог'),
+                        ('comm', 'Отзывы'),
+                        ('neo', 'Матрица'),
+                        ('test_db', 'БД'),
+                    ] %}
+                    {% for endpoint, label in nav %}
+                    <a href="{{ url_for(endpoint) }}"
+                       class="navigation__link{% if request.endpoint == endpoint %} is-active{% endif %}"
+                       {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a>
+                    {% endfor %}
+                </div>
+
+                <div class="navigation__actions">
+                    <button class="icon-btn" type="button" id="theme-toggle" aria-label="Переключить тему">
+                        <span class="theme-icon theme-icon--moon">{{ icon('moon', 19) }}</span>
+                        <span class="theme-icon theme-icon--sun">{{ icon('sun', 19) }}</span>
+                    </button>
+
+                    {% if current_user %}
+                        {% if is_admin() %}
+                        <a class="btn btn--ghost btn--sm" href="{{ url_for('admin.dashboard') }}">
+                            {{ icon('shield', 16) }} Админка
+                        </a>
+                        {% endif %}
+                        <a class="user-chip" href="{{ url_for('user_profile', username=current_user.username, user_id=current_user.id) }}">
+                            <span class="user-chip__avatar">{{ current_user.username[:1]|upper }}</span>
+                            <span class="user-chip__name">{{ current_user.username }}</span>
+                        </a>
+                        <form action="{{ url_for('logout') }}" method="post" class="inline-form">
+                            {{ csrf_input() }}
+                            <button class="icon-btn" type="submit" aria-label="Выйти" title="Выйти">{{ icon('log-out', 19) }}</button>
+                        </form>
+                    {% else %}
+                        <a class="btn btn--primary btn--sm" href="{{ url_for('login') }}">Войти</a>
+                    {% endif %}
+                </div>
             </div>
         </nav>
     </header>
 
-    <main class="page-content">
+    {# Всплывающие уведомления #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toasts" role="region" aria-label="Уведомления" aria-live="polite">
+        {% for category, message in messages %}
+        {% set kind = category if category in ['success', 'error', 'info', 'warning'] else 'info' %}
+        <div class="toast toast--{{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">
+            <span class="toast__icon">{{ icon('check' if kind == 'success' else 'alert' if kind in ['error', 'warning'] else 'info', 18) }}</span>
+            <span class="toast__text">{{ message }}</span>
+            <button class="toast__close" type="button" aria-label="Закрыть">{{ icon('x', 16) }}</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="page-content" id="main">
         {% block content %}{% endblock %}
     </main>
-
-
 
     <footer class="site-footer">
         <div class="site-footer__inner">
             <div class="site-footer__about">
-                <a class="site-footer__brand" href="/"> shishacorparation</a>
-                <p> </p>
+                <a class="site-footer__brand" href="{{ url_for('home') }}">shishacorparation</a>
+                <p>Личный сайт на Flask: каталог, отзывы и немного матрицы.</p>
             </div>
 
-    <div class="site-footer__links">
-        <div class="site-footer__row">
-            <a href="/">Главная</a>
-            <a href="{{ url_for('about') }}">Обо мне</a>
-            <a href="{{ url_for('catalog') }}">Каталог</a>
-            <a href="{{ url_for('comm') }}">Отзывы</a>
-            <a href="{{ url_for('neo') }}">Матрица</a>
-            <a href="{{ url_for('login') }}">Войти</a>
+            <nav class="site-footer__nav" aria-label="Карта сайта">
+                <a href="{{ url_for('home') }}">Главная</a>
+                <a href="{{ url_for('about') }}">Обо мне</a>
+                <a href="{{ url_for('catalog') }}">Каталог</a>
+                <a href="{{ url_for('comm') }}">Отзывы</a>
+                <a href="{{ url_for('neo') }}">Матрица</a>
+                <a href="{{ url_for('login') }}">Войти</a>
+            </nav>
         </div>
+        <div class="site-footer__bottom">
+            <p>© {{ now().year }} shishacorparation</p>
+            <a href="https://github.com/LUCKMERyt" target="_blank" rel="noopener noreferrer">
+                {{ icon('github', 16) }} LUCKMERyt
+            </a>
+        </div>
+    </footer>
 
-            
-        <div class="site-footer__row">
-            <a href="#">Мои проекты</a>
-            <a href="#">Интересы</a>
-            <a href="#">Галерея</a>
-            <a href="#">Новости</a>
-            <a href="#">Полезное</a>
-            <a href="#">Контакты</a>
-        </div>
+    <button class="to-top" type="button" id="to-top" aria-label="Наверх" hidden>{{ icon('arrow-up', 20) }}</button>
 
-        <div class="site-footer__row">
-            <a href="#">Сотрудничество</a>
-            <a href="#">Частые вопросы</a>
-            <a href="#">Обратная связь</a>
-            <a href="#">Правила сайта</a>
-            <a href="#">Карта сайта</a>
-            <a href="#">Конфиденциальность</a>
-            
-        </div>
-    </div>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
 </html>

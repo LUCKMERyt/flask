@@ -49,10 +49,21 @@ class Product(db.Model):
     category = db.relationship("Category", back_populates="products")
 
 
-# НОВАЯ МОДЕЛЬ — для отслеживания посещений сайта
+# Для отслеживания посещений сайта
 class PageView(db.Model):
     __tablename__ = "page_views"
     id = db.Column(db.Integer, primary_key=True)
     visited_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     page = db.Column(db.String(100), default="unknown")
     ip = db.Column(db.String(50))
+
+
+# НОВОЕ: отзывы посетителей (страница «Отзывы»)
+# После обновления выполните:  flask db upgrade
+class Review(db.Model):
+    __tablename__ = "reviews"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(60), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)

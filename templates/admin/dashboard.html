@@ -1,12 +1,12 @@
 {% extends "admin_base.html" %}
+{% from "admin/_macros.html" import stars with context %}
 {% block title %}Дашборд{% endblock %}
 {% block header %}Обзор системы{% endblock %}
 
 {% block content %}
 <!-- 1. Карточки статистики -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Пользователи -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+    <a href="{{ url_for('admin.users_list') }}" class="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition">
         <div class="flex justify-between items-start">
             <div>
                 <p class="text-sm text-gray-500 font-medium">Всего пользователей</p>
@@ -18,10 +18,9 @@
             <span class="text-green-600 font-semibold flex items-center"><i class="fas fa-arrow-up mr-1"></i> {{ users_last_week }}</span>
             <span class="text-gray-500 ml-2">новых за неделю</span>
         </div>
-    </div>
+    </a>
 
-    <!-- Товары -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <a href="{{ url_for('admin.products_list') }}" class="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition">
         <div class="flex justify-between items-start">
             <div>
                 <p class="text-sm text-gray-500 font-medium">Всего товаров</p>
@@ -33,10 +32,9 @@
             <span class="text-green-600 font-semibold flex items-center"><i class="fas fa-arrow-up mr-1"></i> {{ products_last_week }}</span>
             <span class="text-gray-500 ml-2">добавлено за неделю</span>
         </div>
-    </div>
+    </a>
 
-    <!-- Категории -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <a href="{{ url_for('admin.categories_list') }}" class="block bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition">
         <div class="flex justify-between items-start">
             <div>
                 <p class="text-sm text-gray-500 font-medium">Категорий</p>
@@ -44,178 +42,223 @@
             </div>
             <div class="p-3 bg-purple-50 rounded-lg text-purple-600"><i class="fas fa-tags text-xl"></i></div>
         </div>
-    </div>
+        <div class="mt-4 text-sm text-gray-500">Управление разделами каталога</div>
+    </a>
 
-    <!-- Выручка (заглушка) -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <!-- Просмотры вместо прежней заглушки «выручка» -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div class="flex justify-between items-start">
             <div>
-                <p class="text-sm text-gray-500 font-medium">Выручка за месяц</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">₽{{ monthly_revenue }}</h3>
+                <p class="text-sm text-gray-500 font-medium">Просмотры за 7 дней</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ views_week }}</h3>
             </div>
-            <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-ruble-sign text-xl"></i></div>
+            <div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-eye text-xl"></i></div>
+        </div>
+        <div class="mt-4 text-sm text-gray-500">по данным счётчика посещений</div>
+    </div>
+</div>
+
+<!-- 2. График + топ страниц -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-8">
+    <div class="xl:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h3 class="font-bold text-gray-800">
+                <i class="fas fa-chart-line text-brand-500 mr-2"></i>Посещения и регистрации за 7 дней
+            </h3>
+            <div class="flex items-center gap-4 text-xs text-gray-500">
+                <span><span class="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 mr-1.5"></span>Просмотры</span>
+                <span><span class="inline-block w-2.5 h-2.5 rounded-full bg-sky-400 mr-1.5"></span>Регистрации</span>
+            </div>
+        </div>
+        <div class="relative h-64 w-full">
+            <canvas id="visitsChart"></canvas>
         </div>
     </div>
-</div>
 
-<!-- 2. График регистраций -->
-<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-    <h3 class="font-bold text-gray-800 mb-4">
-        <i class="fas fa-user-plus text-blue-500 mr-2"></i>
-        Динамика регистраций новых пользователей (последние 7 дней)
-    </h3>
-    <div class="relative h-64 w-full">
-        <canvas id="visitsChart"></canvas>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800 mb-4"><i class="fas fa-fire text-brand-500 mr-2"></i>Популярные страницы</h3>
+        {% if top_pages %}
+        {% set top = top_pages[0][1] %}
+        <ul class="space-y-3">
+            {% for page, cnt in top_pages %}
+            <li>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="font-medium text-gray-700">{{ page }}</span>
+                    <span class="text-gray-500">{{ cnt }}</span>
+                </div>
+                <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-brand-500" style="width: {{ (cnt / top * 100)|round|int }}%"></div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500">Данных о посещениях пока нет.</p>
+        {% endif %}
     </div>
 </div>
 
-<!-- 3. Панель управления таблицей -->
-<div id="products" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-    <form method="GET" action="{{ url_for('admin.dashboard') }}" class="w-full sm:w-96 relative">
-        <input type="text" name="search" placeholder="Поиск товаров..." value="{{ request.args.get('search', '') }}"
-               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
-    </form>
-    <button onclick="document.getElementById('addModal').classList.remove('hidden')" 
-            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center transition shadow-sm">
+<!-- 3. Быстрые действия -->
+<div class="flex flex-wrap gap-3 mb-6">
+    <a href="{{ url_for('admin.products_list') }}#add" onclick="event.preventDefault(); openModal('addModal');"
+       class="bg-brand-500 hover:bg-brand-400 text-black font-semibold px-5 py-2.5 rounded-lg flex items-center transition shadow-sm">
         <i class="fas fa-plus mr-2"></i> Добавить товар
-    </button>
+    </a>
+    <a href="{{ url_for('admin.products_export') }}" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center transition">
+        <i class="fas fa-file-csv mr-2"></i> Экспорт товаров (CSV)
+    </a>
 </div>
 
-<!-- 4. Таблица последних товаров -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-        <h3 class="font-semibold text-gray-800">Последние добавленные товары</h3>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+    <!-- Таблица последних товаров -->
+    <div class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Последние добавленные товары</h3>
+            <a href="{{ url_for('admin.products_list') }}" class="text-sm text-brand-600 hover:underline">Все товары →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
+                    <tr>
+                        <th class="px-6 py-3">Название</th>
+                        <th class="px-6 py-3">Цена</th>
+                        <th class="px-6 py-3">Категория</th>
+                        <th class="px-6 py-3 text-right">Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for p in recent_products %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ p.name }}</td>
+                        <td class="px-6 py-4 text-gray-700 whitespace-nowrap">{{ p.price|rub }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-medium border border-brand-100">
+                                {{ p.category.name if p.category else 'Без категории' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <form method="POST" action="{{ url_for('admin.product_delete', id=p.id) }}" class="inline">
+                                {{ csrf_input() }}
+                                <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Удалить"
+                                        data-confirm="Вы уверены, что хотите удалить этот товар?">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Товары не найдены. Добавьте первый товар!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-semibold">
-                <tr>
-                    <th class="px-6 py-3">Название</th>
-                    <th class="px-6 py-3">Цена</th>
-                    <th class="px-6 py-3">Категория</th>
-                    <th class="px-6 py-3 text-right">Действия</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                {% for p in recent_products %}
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 font-medium text-gray-900">{{ p.name }}</td>
-                    <td class="px-6 py-4 text-gray-700">{{ p.price }} ₽</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100">
-                            {{ p.category.name if p.category else 'Без категории' }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right space-x-3">
-                        <form method="POST" action="{{ url_for('admin.product_delete', id=p.id) }}" class="inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот товар?');">
-                            <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Удалить">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">Товары не найдены. Добавьте первый товар!</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <!-- Последние отзывы -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-800">Отзывы</h3>
+            <a href="{{ url_for('admin.reviews_list') }}" class="text-sm text-brand-600 hover:underline">Все →</a>
+        </div>
+        <div class="px-6 pt-4 pb-2 text-sm text-gray-500">
+            {% if reviews_total %}
+            Средняя оценка: <strong class="text-gray-800">{{ '%.1f'|format(avg_rating) }}</strong> · всего {{ reviews_total }}
+            {% else %}Отзывов пока нет.{% endif %}
+        </div>
+        <ul class="divide-y divide-gray-100">
+            {% for r in recent_reviews %}
+            <li class="px-6 py-3">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="font-medium text-gray-800 text-sm truncate">{{ r.name }}</span>
+                    {{ stars(r.rating) }}
+                </div>
+                <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ r.text }}</p>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </div>
 
-<!-- 5. Модальное окно для добавления -->
-<div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl transform transition-all scale-100">
+<!-- Модальное окно для добавления товара -->
+<div id="addModal" data-modal class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-lg font-bold text-gray-800">Добавить новый товар</h3>
-            <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+            <button type="button" onclick="closeModal('addModal')" class="text-gray-400 hover:text-gray-600" aria-label="Закрыть"><i class="fas fa-times text-xl"></i></button>
         </div>
         <form method="POST" action="{{ url_for('admin.product_add') }}">
+            {{ csrf_input() }}
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Название товара</label>
-                <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <input type="text" name="name" required maxlength="150" class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Цена (₽)</label>
-                <input type="number" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <input type="number" name="price" step="0.01" min="0" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Категория</label>
-                <select name="category_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+                <select name="category_id" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none bg-white">
                     {% for cat in categories %}
                     <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% else %}
+                    <option value="" disabled selected>Сначала создайте категорию</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="flex justify-end space-x-3 pt-2 border-t border-gray-100">
-                <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')"
-                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium">Отмена</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
+                <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition font-medium">Отмена</button>
+                <button type="submit" class="px-4 py-2 bg-brand-500 text-black rounded-lg hover:bg-brand-400 transition font-semibold shadow-sm">
                     <i class="fas fa-save mr-2"></i>Сохранить
                 </button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}
 
-<!-- 6. Скрипт для Chart.js (Чистый, без дубликатов) -->
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('visitsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ visits_labels | tojson }},
-            datasets: [{
-                label: 'Новых пользователей',
-                data: {{ visits_data | tojson }},
-                borderColor: 'rgb(37, 99, 235)',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                borderWidth: 2,
-                tension: 0.3,
-                fill: true,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: 'rgb(37, 99, 235)',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    titleFont: { size: 13 },
-                    bodyFont: { size: 13 },
-                    padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return 'Регистраций: ' + context.parsed.y;
-                        }
-                    }
-                }
+    (function () {
+        if (typeof Chart === 'undefined') return;
+        var dark = document.documentElement.classList.contains('dark');
+        var grid = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+        var tick = dark ? '#a3a3a3' : '#6b7280';
+        var labels = {{ visits_labels | tojson }};
+        function ds(label, data, color) {
+            return {
+                label: label, data: data, borderColor: color, backgroundColor: color + '22',
+                borderWidth: 2, tension: 0.35, fill: true, pointBackgroundColor: dark ? '#121212' : '#fff',
+                pointBorderColor: color, pointBorderWidth: 2, pointRadius: 3.5, pointHoverRadius: 6
+            };
+        }
+        new Chart(document.getElementById('visitsChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    ds('Просмотры', {{ visits_data | tojson }}, '#ff8a00'),
+                    ds('Регистрации', {{ registrations_data | tojson }}, '#38bdf8')
+                ]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
-                    ticks: { stepSize: 1, font: { size: 11 } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)', padding: 10, cornerRadius: 8,
+                        titleFont: { size: 13 }, bodyFont: { size: 13 }
+                    }
                 },
-                x: {
-                    grid: { display: false, drawBorder: false },
-                    ticks: { font: { size: 11 } }
+                scales: {
+                    y: { beginAtZero: true, grid: { color: grid }, border: { display: false }, ticks: { precision: 0, color: tick, font: { size: 11 } } },
+                    x: { grid: { display: false }, border: { display: false }, ticks: { color: tick, font: { size: 11 } } }
                 }
             }
-        }
-    });
+        });
+    })();
 </script>
 {% endblock %}

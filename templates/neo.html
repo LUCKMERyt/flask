@@ -5,6 +5,9 @@
 
 {% block content %}
 <section class="matrix">
+    {# Живой «цифровой дождь» рисуется в app.js; CSS-колонки ниже — запасной вариант без JavaScript #}
+    <canvas class="matrix__canvas" id="matrix-canvas" aria-hidden="true"></canvas>
+
     <div class="matrix__rain" aria-hidden="true">
         <div class="matrix__column">0101<br>NEO<br>1010<br>CODE<br>0110<br>1101<br>0101<br>1010<br>CODE<br>1100</div>
         <div class="matrix__column">1010<br>0101<br>MATRIX<br>1100<br>NEO<br>0110<br>1010<br>CODE<br>0101<br>1101</div>
@@ -12,7 +15,14 @@
         <div class="matrix__column">0110<br>1010<br>1101<br>CODE<br>0101<br>MATRIX<br>1010<br>0110<br>1100<br>NEO</div>
     </div>
 
-    <h1>Это матрица</h1>
-    <p class="matrix__greeting">ПРИВЕТ</p>
+    <div class="matrix__content">
+        <h1 class="matrix__title">Это матрица</h1>
+        <p class="matrix__greeting">ПРИВЕТ</p>
+        <p class="matrix__typed" id="matrix-typed" aria-live="polite" data-lines='["Проснись, Neo…", "Матрица имеет тебя…", "Следуй за белым кроликом."]'></p>
+        <div class="matrix__controls">
+            <button type="button" class="matrix-btn" id="matrix-speed" aria-label="Изменить скорость дождя">Скорость: ×1</button>
+            <button type="button" class="matrix-btn" id="matrix-pause" aria-label="Пауза">Пауза</button>
+        </div>
+    </div>
 </section>
 {% endblock %}

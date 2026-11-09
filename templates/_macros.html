@@ -1,0 +1,57 @@
+{% from "_icons.html" import icon %}
+
+{# Карточка товара (главная и каталог) #}
+{% macro product_card(p) -%}
+{% set is_new = p.added_at and (now() - p.added_at).days < 7 %}
+<article class="product">
+    <div class="product__media" aria-hidden="true">
+        <span class="product__letter">{{ (p.name or '?')[:1]|upper }}</span>
+        {% if is_new %}<span class="badge badge--accent product__badge">Новинка</span>{% endif %}
+    </div>
+    <div class="product__body">
+        {% if p.category %}
+        <a class="product__category" href="{{ url_for('catalog', category_id=p.category.id) }}">{{ p.category.name }}</a>
+        {% else %}
+        <span class="product__category">Без категории</span>
+        {% endif %}
+        <h3 class="product__name">{{ p.name }}</h3>
+        <p class="product__price">{{ p.price|rub }}</p>
+    </div>
+</article>
+{%- endmacro %}
+
+{# Пагинация Flask-SQLAlchemy. Сохраняет остальные GET-параметры через url_with #}
+{% macro pagination_nav(pagination) -%}
+{% if pagination and pagination.pages > 1 %}
+<nav class="pagination" aria-label="Страницы">
+    {% if pagination.has_prev %}
+    <a class="pagination__item" href="{{ url_with(page=pagination.prev_num) }}" rel="prev" aria-label="Назад">←</a>
+    {% else %}
+    <span class="pagination__item is-disabled" aria-hidden="true">←</span>
+    {% endif %}
+
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if p is none %}
+        <span class="pagination__gap">…</span>
+        {% elif p == pagination.page %}
+        <span class="pagination__item is-current" aria-current="page">{{ p }}</span>
+        {% else %}
+        <a class="pagination__item" href="{{ url_with(page=p) }}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+    <a class="pagination__item" href="{{ url_with(page=pagination.next_num) }}" rel="next" aria-label="Вперёд">→</a>
+    {% else %}
+    <span class="pagination__item is-disabled" aria-hidden="true">→</span>
+    {% endif %}
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{# Звёзды рейтинга (только отображение) #}
+{% macro stars(value) -%}
+<span class="stars" role="img" aria-label="Оценка {{ value }} из 5">
+    {%- for i in range(1, 6) -%}<span class="stars__item{% if i <= value %} is-on{% endif %}">★</span>{%- endfor -%}
+</span>
+{%- endmacro %}

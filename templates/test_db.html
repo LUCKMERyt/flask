@@ -1,26 +1,34 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+
 {% block title %}Таблица{% endblock %}
 
 {% block content %}
 <div class="records-page">
-    <h1>Данные из таблицы test_db</h1>
+    <header class="page-head reveal">
+        <h1 class="page-head__title">Данные из таблицы test_db</h1>
+        <p class="page-head__lead">Простой CRUD: добавляйте, правьте и удаляйте записи.</p>
+    </header>
 
-    <section class="records-card">
-        <h2>Добавить запись</h2>
+    <section class="records-card card reveal">
+        <h2 class="card__title">Добавить запись</h2>
         <form class="records-add-form" action="{{ url_for('add_record') }}" method="POST">
-            <label for="name">Имя:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="age">Возраст:</label>
-            <input type="number" id="age" name="age" min="0" required>
-
-            <button type="submit">Добавить</button>
+            {{ csrf_input() }}
+            <div class="field records-field">
+                <label for="name">Имя</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="field records-field">
+                <label for="age">Возраст</label>
+                <input type="number" id="age" name="age" min="0" required>
+            </div>
+            <button type="submit" class="btn btn--primary">{{ icon('plus', 16) }} Добавить</button>
         </form>
     </section>
 
     {% if rows %}
-    <div class="records-table-wrap">
-        <table class="records-table">
+    <div class="table-wrapper records-table-wrap reveal">
+        <table class="catalog-table records-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -37,15 +45,17 @@
                     <td>{{ row.age }}</td>
                     <td class="records-actions">
                         <form action="{{ url_for('update_record', id=row.id) }}" method="POST">
-                            <input type="text" name="name" value="{{ row.name }}" required>
-                            <input type="number" name="age" value="{{ row.age }}" min="0" required>
-                            <button type="submit">Изменить</button>
+                            {{ csrf_input() }}
+                            <input type="text" name="name" value="{{ row.name }}" aria-label="Имя" required>
+                            <input type="number" name="age" value="{{ row.age }}" min="0" aria-label="Возраст" required>
+                            <button type="submit" class="btn btn--ghost btn--sm">{{ icon('check', 15) }} Изменить</button>
                         </form>
 
                         <form action="{{ url_for('delete_record', id=row.id) }}" method="POST">
-                            <button class="records-delete" type="submit"
-                                    onclick="return confirm('Удалить эту запись?')">
-                                Удалить
+                            {{ csrf_input() }}
+                            <button class="btn btn--danger btn--sm records-delete" type="submit"
+                                    data-confirm="Удалить эту запись?">
+                                {{ icon('trash', 15) }} Удалить
                             </button>
                         </form>
                     </td>
@@ -55,7 +65,11 @@
         </table>
     </div>
     {% else %}
-    <p class="records-empty">В таблице пока нет записей.</p>
+    <div class="empty-state card reveal">
+        <span class="empty-state__icon">{{ icon('database', 32) }}</span>
+        <h2 class="records-empty">В таблице пока нет записей</h2>
+        <p class="muted">Добавьте первую запись с помощью формы выше.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}
