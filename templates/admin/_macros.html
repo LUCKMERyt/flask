@@ -1,0 +1,74 @@
+{# Общие элементы админки #}
+
+{# Панель поиска. extra — произвольный HTML внутри формы (например, фильтры) #}
+{% macro search_form(value, placeholder='Поиск…', name='search') -%}
+<div class="relative w-full sm:w-80">
+    <input type="text" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}"
+           class="focus-brand w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg outline-none transition">
+    <i class="fas fa-search absolute left-3.5 top-3.5 text-gray-400"></i>
+</div>
+{%- endmacro %}
+
+{# Модальное окно: {% call modal('addModal', 'Заголовок') %}…форма…{% endcall %} #}
+{% macro modal(id, title) -%}
+<div id="{{ id }}" data-modal class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-labelledby="{{ id }}-title">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div class="flex justify-between items-center mb-5">
+            <h3 id="{{ id }}-title" class="text-lg font-bold text-gray-800">{{ title }}</h3>
+            <button type="button" onclick="closeModal('{{ id }}')" class="text-gray-400 hover:text-gray-600" aria-label="Закрыть"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        {{ caller() }}
+    </div>
+</div>
+{%- endmacro %}
+
+{# Поле формы с подписью #}
+{% macro field(label, input_html) -%}
+<div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ label }}</label>
+    {{ input_html }}
+</div>
+{%- endmacro %}
+
+{# Постраничная навигация (использует url_with из контекста приложения) #}
+{% macro pager(pagination) -%}
+{% if pagination and pagination.pages > 1 %}
+<nav class="flex items-center justify-between flex-wrap gap-3 px-6 py-4 border-t border-gray-100" aria-label="Страницы">
+    <p class="text-sm text-gray-500">Показано {{ pagination.items|length }} из {{ pagination.total }}</p>
+    <div class="flex items-center gap-1">
+        {% if pagination.has_prev %}
+        <a href="{{ url_with(page=pagination.prev_num) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50" aria-label="Назад"><i class="fas fa-chevron-left"></i></a>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if p is none %}
+            <span class="px-2 text-gray-400">…</span>
+            {% elif p == pagination.page %}
+            <span class="px-3 py-1.5 rounded-lg bg-brand-500 text-black text-sm font-semibold" aria-current="page">{{ p }}</span>
+            {% else %}
+            <a href="{{ url_with(page=p) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50">{{ p }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ url_with(page=pagination.next_num) }}" class="px-3 py-1.5 rounded-lg border border-gray-200 text-sm hover:bg-gray-50" aria-label="Вперёд"><i class="fas fa-chevron-right"></i></a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+{%- endmacro %}
+
+{# Пустое состояние таблицы #}
+{% macro empty_row(cols, icon_cls, text) -%}
+<tr>
+    <td colspan="{{ cols }}" class="px-6 py-12 text-center text-gray-500">
+        <i class="fas {{ icon_cls }} text-4xl text-gray-300 mb-3 block"></i>
+        {{ text }}
+    </td>
+</tr>
+{%- endmacro %}
+
+{# Звёзды рейтинга #}
+{% macro stars(value) -%}
+<span class="text-brand-500 whitespace-nowrap" aria-label="{{ value }} из 5">
+    {%- for i in range(1, 6) -%}<i class="{{ 'fas' if i <= value else 'far' }} fa-star text-xs"></i>{%- endfor -%}
+</span>
+{%- endmacro %}

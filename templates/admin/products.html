@@ -1,19 +1,39 @@
 {% extends "admin_base.html" %}
+{% from "admin/_macros.html" import search_form, modal, pager, empty_row with context %}
 {% block title %}Товары{% endblock %}
 {% block header %}Управление товарами{% endblock %}
 
 {% block content %}
-<!-- Панель поиска и добавления -->
-<div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-    <form method="GET" class="w-full sm:w-96 relative">
-        <input type="text" name="search" value="{{ search }}" placeholder="Поиск по названию..."
-               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-        <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+<!-- Панель поиска, фильтров и добавления -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
+    <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto" id="filter-form">
+        {{ search_form(search, 'Поиск по названию…') }}
+        <select name="category_id" onchange="this.form.submit()" aria-label="Категория"
+                class="focus-brand px-3 py-2.5 border border-gray-300 rounded-lg outline-none bg-white">
+            <option value="">Все категории</option>
+            {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="sort" onchange="this.form.submit()" aria-label="Сортировка"
+                class="focus-brand px-3 py-2.5 border border-gray-300 rounded-lg outline-none bg-white">
+            <option value="new" {% if sort == 'new' %}selected{% endif %}>Сначала новые</option>
+            <option value="old" {% if sort == 'old' %}selected{% endif %}>Сначала старые</option>
+            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Цена ↑</option>
+            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Цена ↓</option>
+            <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+        </select>
     </form>
-    <button onclick="openAddModal()"
-            class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center transition shadow-sm">
-        <i class="fas fa-plus mr-2"></i> Добавить товар
-    </button>
+    <div class="flex gap-3">
+        <a href="{{ url_for('admin.products_export', search=search or None, category_id=category_id, sort=sort) }}"
+           class="px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center justify-center transition">
+            <i class="fas fa-file-csv mr-2"></i> CSV
+        </a>
+        <button type="button" onclick="openModal('addModal')"
+                class="flex-1 sm:flex-none bg-brand-500 hover:bg-brand-400 text-black font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center transition shadow-sm">
+            <i class="fas fa-plus mr-2"></i> Добавить товар
+        </button>
+    </div>
 </div>
 
 <!-- Таблица -->
@@ -34,119 +54,103 @@
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4 text-gray-500 text-sm">#{{ p.id }}</td>
                     <td class="px-6 py-4 font-medium text-gray-900">{{ p.name }}</td>
-                    <td class="px-6 py-4 text-gray-700">{{ p.price }} ₽</td>
+                    <td class="px-6 py-4 text-gray-700 whitespace-nowrap">{{ p.price|rub }}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100">
+                        <span class="px-2.5 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-medium border border-brand-100">
                             {{ p.category.name if p.category else '—' }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right space-x-2">
-                        <button onclick="openEditModal({{ p.id }}, '{{ p.name }}', {{ p.price }}, {{ p.category_id }})"
-                                class="text-blue-600 hover:text-blue-800 transition" title="Редактировать">
+                    <td class="px-6 py-4 text-right whitespace-nowrap space-x-3">
+                        {# данные передаются через data-атрибуты — безопасно для любых символов в названии #}
+                        <button type="button" class="js-edit text-brand-600 hover:text-brand-800 transition" title="Редактировать"
+                                data-action="{{ url_for('admin.product_edit', id=p.id) }}"
+                                data-name="{{ p.name }}" data-price="{{ p.price }}" data-category="{{ p.category_id }}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <form method="POST" action="{{ url_for('admin.product_delete', id=p.id) }}" class="inline"
-                              onsubmit="return confirm('Удалить товар «{{ p.name }}»?');">
-                            <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Удалить">
+                        <form method="POST" action="{{ url_for('admin.product_delete', id=p.id) }}" class="inline">
+                            {{ csrf_input() }}
+                            <button type="submit" class="text-red-500 hover:text-red-700 transition" title="Удалить"
+                                    data-confirm="Удалить товар «{{ p.name }}»?">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
                     </td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="5" class="px-6 py-10 text-center text-gray-500">
-                        <i class="fas fa-box-open text-4xl text-gray-300 mb-3 block"></i>
-                        Товары не найдены
-                    </td>
-                </tr>
+                {{ empty_row(5, 'fa-box-open', 'Товары не найдены') }}
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {{ pager(pagination) }}
 </div>
 
 <!-- Модальное окно: ДОБАВЛЕНИЕ -->
-<div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <div class="flex justify-between items-center mb-5">
-            <h3 class="text-lg font-bold text-gray-800">Добавить товар</h3>
-            <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <form method="POST" action="{{ url_for('admin.product_add') }}">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Название</label>
-                <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Цена (₽)</label>
-                <input type="number" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Категория</label>
-                <select name="category_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="flex justify-end space-x-3 pt-2 border-t">
-                <button type="button" onclick="closeAddModal()" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Отмена</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><i class="fas fa-save mr-2"></i>Сохранить</button>
-            </div>
-        </form>
+{% call modal('addModal', 'Добавить товар') %}
+<form method="POST" action="{{ url_for('admin.product_add') }}">
+    {{ csrf_input() }}
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Название</label>
+        <input type="text" name="name" required maxlength="150" class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
     </div>
-</div>
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Цена (₽)</label>
+        <input type="number" name="price" step="0.01" min="0" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+    </div>
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Категория</label>
+        <select name="category_id" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none bg-white">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% else %}
+            <option value="" disabled selected>Сначала создайте категорию</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex justify-end space-x-3 pt-2 border-t border-gray-100">
+        <button type="button" onclick="closeModal('addModal')" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Отмена</button>
+        <button type="submit" class="px-4 py-2 bg-brand-500 text-black font-semibold rounded-lg hover:bg-brand-400"><i class="fas fa-save mr-2"></i>Сохранить</button>
+    </div>
+</form>
+{% endcall %}
 
 <!-- Модальное окно: РЕДАКТИРОВАНИЕ -->
-<div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <div class="flex justify-between items-center mb-5">
-            <h3 class="text-lg font-bold text-gray-800">Редактировать товар</h3>
-            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <form id="editForm" method="POST" action="">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Название</label>
-                <input type="text" id="edit_name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Цена (₽)</label>
-                <input type="number" id="edit_price" name="price" step="0.01" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">Категория</label>
-                <select id="edit_category" name="category_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="flex justify-end space-x-3 pt-2 border-t">
-                <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Отмена</button>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"><i class="fas fa-check mr-2"></i>Обновить</button>
-            </div>
-        </form>
+{% call modal('editModal', 'Редактировать товар') %}
+<form id="editForm" method="POST" action="">
+    {{ csrf_input() }}
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Название</label>
+        <input type="text" id="edit_name" name="name" required maxlength="150" class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
     </div>
-</div>
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Цена (₽)</label>
+        <input type="number" id="edit_price" name="price" step="0.01" min="0" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+    </div>
+    <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Категория</label>
+        <select id="edit_category" name="category_id" required class="focus-brand w-full px-3 py-2 border border-gray-300 rounded-lg outline-none bg-white">
+            {% for cat in categories %}
+            <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex justify-end space-x-3 pt-2 border-t border-gray-100">
+        <button type="button" onclick="closeModal('editModal')" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">Отмена</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"><i class="fas fa-check mr-2"></i>Обновить</button>
+    </div>
+</form>
+{% endcall %}
+{% endblock %}
 
+{% block scripts %}
 <script>
-    function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
-    function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
-
-    function openEditModal(id, name, price, categoryId) {
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_price').value = price;
-        document.getElementById('edit_category').value = categoryId;
-        document.getElementById('editForm').action = '/admin/products/' + id + '/edit';
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-    function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-
-    // Закрытие по клику вне модалки
-    document.querySelectorAll('#addModal, #editModal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) this.classList.add('hidden');
+    document.querySelectorAll('.js-edit').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_name').value = btn.dataset.name;
+            document.getElementById('edit_price').value = btn.dataset.price;
+            document.getElementById('edit_category').value = btn.dataset.category;
+            document.getElementById('editForm').action = btn.dataset.action;
+            openModal('editModal');
         });
     });
 </script>

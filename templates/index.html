@@ -1,29 +1,103 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import product_card with context %}
 
 {% block title %}Главная — Мой личный сайт{% endblock %}
 
 {% block content %}
-<section class="home">
-    <div class="home__content">
-        <p class="home__eyebrow">ЛИЧНЫЙ САЙТ</p>
-        <h1 class="home__title">Привет!<br>Рад видеть тебя здесь.</h1>
-        <p class="home__text">
+<section class="hero reveal">
+    <div class="hero__content">
+        <p class="eyebrow"><span class="eyebrow__dot"></span> Личный сайт</p>
+        <h1 class="hero__title">Привет!<br><span class="gradient-text">Рад видеть тебя здесь.</span></h1>
+        <p class="hero__text">
             Это моё пространство в интернете: здесь можно узнать обо мне,
-            посмотреть мои проекты и связаться со мной.
+            посмотреть каталог, оставить отзыв и заглянуть в матрицу.
         </p>
 
-        <div class="home__actions">
-            <a class="home__button" href="{{ url_for('about') }}">Обо мне</a>
-            <a class="home__link" href="{{ url_for('catalog') }}">Посмотреть каталог <span aria-hidden="true">→</span></a>
+        <div class="hero__actions">
+            <a class="btn btn--primary btn--lg" href="{{ url_for('about') }}">Обо мне</a>
+            <a class="btn btn--link" href="{{ url_for('catalog') }}">Посмотреть каталог {{ icon('arrow-right', 18) }}</a>
         </div>
+
+        <ul class="chips" aria-label="Технологии сайта">
+            <li>Python</li><li>Flask</li><li>SQLAlchemy</li><li>MySQL</li><li>Jinja2</li>
+        </ul>
     </div>
 
-    <div class="home__visual" aria-hidden="true">
-        <div class="home__orbit home__orbit--outer"></div>
-        <div class="home__orbit home__orbit--inner"></div>
-        <div class="home__symbol">&lt;/&gt;</div>
-        <span class="home__spark home__spark--one">✳</span>
-        <span class="home__spark home__spark--two">+</span>
+    <div class="hero__visual" aria-hidden="true">
+        <div class="hero__orbit hero__orbit--outer"></div>
+        <div class="hero__orbit hero__orbit--inner"></div>
+        <div class="hero__symbol">&lt;/&gt;</div>
+        <span class="hero__spark hero__spark--one">✳</span>
+        <span class="hero__spark hero__spark--two">+</span>
     </div>
+</section>
+
+<section class="stats reveal" aria-label="Статистика сайта">
+    <div class="stat">
+        <span class="stat__value" data-count="{{ stats.products }}">{{ stats.products }}</span>
+        <span class="stat__label">{{ ru_plural(stats.products, 'товар', 'товара', 'товаров') }} в каталоге</span>
+    </div>
+    <div class="stat">
+        <span class="stat__value" data-count="{{ stats.categories }}">{{ stats.categories }}</span>
+        <span class="stat__label">{{ ru_plural(stats.categories, 'категория', 'категории', 'категорий') }}</span>
+    </div>
+    <div class="stat">
+        <span class="stat__value" data-count="{{ stats.reviews }}">{{ stats.reviews }}</span>
+        <span class="stat__label">{{ ru_plural(stats.reviews, 'отзыв', 'отзыва', 'отзывов') }} посетителей</span>
+    </div>
+</section>
+
+<section class="section">
+    <header class="section__head reveal">
+        <h2 class="section__title">Что здесь есть</h2>
+        <p class="section__subtitle">Выбери раздел и загляни внутрь.</p>
+    </header>
+
+    <div class="grid grid--4">
+        <a class="card feature reveal" href="{{ url_for('about') }}">
+            <span class="feature__icon">{{ icon('user', 24) }}</span>
+            <h3>Обо мне</h3>
+            <p>Образование, путь и контакты.</p>
+        </a>
+        <a class="card feature reveal" href="{{ url_for('catalog') }}">
+            <span class="feature__icon">{{ icon('grid', 24) }}</span>
+            <h3>Каталог</h3>
+            <p>Поиск, фильтры по цене и категориям, сортировка.</p>
+        </a>
+        <a class="card feature reveal" href="{{ url_for('comm') }}">
+            <span class="feature__icon">{{ icon('message', 24) }}</span>
+            <h3>Отзывы</h3>
+            <p>Оставь оценку и прочитай, что пишут другие.</p>
+        </a>
+        <a class="card feature reveal" href="{{ url_for('neo') }}">
+            <span class="feature__icon">{{ icon('terminal', 24) }}</span>
+            <h3>Матрица</h3>
+            <p>Цифровой дождь. Следуй за белым кроликом.</p>
+        </a>
+    </div>
+</section>
+
+{% if latest %}
+<section class="section">
+    <header class="section__head section__head--row reveal">
+        <div>
+            <h2 class="section__title">Новое в каталоге</h2>
+            <p class="section__subtitle">Последние добавленные товары.</p>
+        </div>
+        <a class="btn btn--link" href="{{ url_for('catalog') }}">Весь каталог {{ icon('arrow-right', 18) }}</a>
+    </header>
+    <div class="grid grid--4">
+        {% for p in latest %}<div class="reveal">{{ product_card(p) }}</div>{% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="cta reveal">
+    <div>
+        <h2>Есть мысли о сайте?</h2>
+        <p>Поставь оценку и напиши пару слов — это займёт минуту.</p>
+    </div>
+    <a class="btn btn--primary btn--lg" href="{{ url_for('comm') }}">Оставить отзыв</a>
 </section>
 {% endblock %}

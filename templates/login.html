@@ -1,33 +1,79 @@
 {% extends 'base.html' %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Вход{% endblock %}
 
 {% block content %}
-<section class="login">
-    <h1 class="login__title">Вход на сайт</h1>
+<section class="auth reveal">
+    <div class="auth__card card">
+        {% if current_user %}
+        <h1 class="auth__title">Вы уже вошли</h1>
+        <p class="muted auth__lead">Вы вошли как <strong>{{ current_user.username }}</strong>.</p>
+        <div class="auth__done">
+            <a class="btn btn--primary" href="{{ url_for('home') }}">На главную</a>
+            <form action="{{ url_for('logout') }}" method="post" class="inline-form">
+                {{ csrf_input() }}
+                <button class="btn btn--ghost" type="submit">{{ icon('log-out', 16) }} Выйти</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="tabs" role="tablist" id="auth-tabs" data-initial="{{ mode }}">
+            <button class="tabs__tab{% if mode == 'login' %} is-active{% endif %}" type="button" role="tab"
+                    data-tab="login" aria-selected="{{ 'true' if mode == 'login' else 'false' }}">Вход</button>
+            <button class="tabs__tab{% if mode == 'register' %} is-active{% endif %}" type="button" role="tab"
+                    data-tab="register" aria-selected="{{ 'true' if mode == 'register' else 'false' }}">Регистрация</button>
+        </div>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="login__errors">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+        <h1 class="auth__title login__title" data-title="login">Вход на сайт</h1>
+        <h1 class="auth__title" data-title="register" hidden>Создать аккаунт</h1>
+
+        <form class="form" method="post" data-panel="login" novalidate>
+            {{ csrf_input() }}
+            <input type="hidden" name="action" value="login">
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="field">
+                <label for="login-username">Логин</label>
+                <input type="text" id="login-username" name="username" autocomplete="username"
+                       value="{{ username if mode == 'login' else '' }}" required autofocus>
             </div>
+            <div class="field">
+                <label for="login-password">Пароль</label>
+                <div class="field__password">
+                    <input type="password" id="login-password" name="password" autocomplete="current-password" required>
+                    <button class="icon-btn" type="button" data-toggle-password="login-password" aria-label="Показать пароль">{{ icon('eye', 18) }}</button>
+                </div>
+            </div>
+            <button class="btn btn--primary btn--block login-form__button" type="submit">Войти</button>
+        </form>
+
+        <form class="form" method="post" data-panel="register" {% if mode != 'register' %}hidden{% endif %} novalidate>
+            {{ csrf_input() }}
+            <input type="hidden" name="action" value="register">
+            <input type="hidden" name="next" value="{{ next_url }}">
+
+            <div class="field">
+                <label for="reg-username">Логин</label>
+                <input type="text" id="reg-username" name="username" autocomplete="username"
+                       value="{{ username if mode == 'register' else '' }}" minlength="3" maxlength="30" required>
+                <small class="field__hint">3–30 символов: буквы, цифры, точка, дефис, подчёркивание.</small>
+            </div>
+            <div class="field">
+                <label for="reg-password">Пароль</label>
+                <div class="field__password">
+                    <input type="password" id="reg-password" name="password" autocomplete="new-password" minlength="6" required>
+                    <button class="icon-btn" type="button" data-toggle-password="reg-password" aria-label="Показать пароль">{{ icon('eye', 18) }}</button>
+                </div>
+                <div class="strength" id="strength" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+                <small class="field__hint" id="strength-label">Минимум 6 символов.</small>
+            </div>
+            <div class="field">
+                <label for="reg-confirm">Повторите пароль</label>
+                <input type="password" id="reg-confirm" name="confirm" autocomplete="new-password" required>
+            </div>
+            <button class="btn btn--primary btn--block" type="submit">Создать аккаунт</button>
+        </form>
         {% endif %}
-    {% endwith %}
-
-    <form class="login-form" method="post">
-        <div class="form-field">
-            <label for="username">Логин</label>
-            <input type="text" id="username" name="username" required>
-        </div>
-
-        <div class="form-field">
-            <label for="password">Пароль</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-
-        <button class="login-form__button" type="submit">Войти</button>
-    </form>
+    </div>
 </section>
 {% endblock %}

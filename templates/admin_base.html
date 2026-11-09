@@ -3,37 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Админ-панель{% endblock %}</title>
+    <title>{% block title %}Админ-панель{% endblock %} · Админка</title>
+    <script>
+        // тема общая с сайтом (ключ theme); по умолчанию тёмная
+        (function () {
+            try { if (localStorage.getItem('theme') !== 'light') document.documentElement.classList.add('dark'); }
+            catch (e) { document.documentElement.classList.add('dark'); }
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fff6e8', 100: '#ffe8c2', 200: '#ffd08a', 300: '#ffb347', 400: '#ffa01f',
+                            500: '#ff8a00', 600: '#e87a00', 700: '#b45300', 800: '#8a4000', 900: '#5c2b00'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .focus-brand:focus { outline: none; border-color: #ff8a00; box-shadow: 0 0 0 3px rgb(255 138 0 / 25%); }
+        /* Тёмная тема: переопределяем «светлые» утилиты Tailwind, использованные в шаблонах */
+        .dark body { background: #0a0a0a; color: #e7e7e7; }
+        .dark .bg-white { background-color: #121212; }
+        .dark .bg-gray-50 { background-color: #171717; }
+        .dark .bg-gray-100 { background-color: #202020; }
+        .dark .bg-gray-200 { background-color: #2a2a2a; }
+        .dark .hover\:bg-gray-50:hover { background-color: #1a1a1a; }
+        .dark .hover\:bg-gray-200:hover { background-color: #333; }
+        .dark .border, .dark .border-b, .dark .border-t,
+        .dark .border-gray-100, .dark .border-gray-200, .dark .border-gray-300 { border-color: #2b2218; }
+        .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #2b2218; }
+        .dark .text-gray-900, .dark .text-gray-800 { color: #f4f4f4; }
+        .dark .text-gray-700, .dark .text-gray-600 { color: #cfcfcf; }
+        .dark .text-gray-500 { color: #a3a3a3; }
+        .dark .text-gray-400 { color: #8a8a8a; }
+        .dark .text-gray-300 { color: #4b4b4b; }
+        .dark input, .dark select, .dark textarea { background-color: #0f0f0f; color: #f4f4f4; border-color: #4a3418; }
+        .dark .bg-brand-50 { background-color: rgb(255 138 0 / 12%); }
+        .dark .text-brand-700 { color: #ffb347; }
+        .dark .border-brand-100 { border-color: rgb(255 138 0 / 30%); }
+        .dark .bg-green-50 { background-color: rgb(34 197 94 / 12%); }
+        .dark .text-green-800 { color: #86efac; }
+        .dark .border-green-200 { border-color: rgb(34 197 94 / 35%); }
+        .dark .bg-red-50 { background-color: rgb(239 68 68 / 12%); }
+        .dark .text-red-800 { color: #fca5a5; }
+        .dark .border-red-200 { border-color: rgb(239 68 68 / 35%); }
+        .dark .bg-amber-50 { background-color: rgb(245 158 11 / 12%); }
+        .dark .text-amber-800 { color: #fcd34d; }
+        .dark .border-amber-200 { border-color: rgb(245 158 11 / 35%); }
+        .dark .bg-purple-50 { background-color: rgb(168 85 247 / 14%); }
+        .dark .text-purple-700, .dark .text-purple-600 { color: #d8b4fe; }
+        .dark .border-purple-100 { border-color: rgb(168 85 247 / 30%); }
+        .dark .bg-green-50.stat, .dark .bg-blue-50 { background-color: rgb(96 165 250 / 14%); }
+        .dark .text-blue-600, .dark .text-blue-700 { color: #93c5fd; }
+        .dark .bg-orange-50 { background-color: rgb(255 138 0 / 12%); }
+        .dark .text-orange-600 { color: #ffb347; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 transition-colors">
+    {% set nav = [
+        ('admin.dashboard', 'fa-chart-line', 'Дашборд'),
+        ('admin.products_list', 'fa-box', 'Товары'),
+        ('admin.categories_list', 'fa-tags', 'Категории'),
+        ('admin.users_list', 'fa-users', 'Пользователи'),
+        ('admin.reviews_list', 'fa-comments', 'Отзывы'),
+    ] %}
     <div class="flex h-screen overflow-hidden">
-        
+
         <!-- Мобильный оверлей -->
-        <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"></div>
+        <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-60 z-20 hidden md:hidden"></div>
 
         <!-- Боковая панель -->
-        <aside id="sidebar" class="w-64 bg-slate-900 text-white flex flex-col fixed md:static h-full transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-30">
-            <div class="h-16 flex items-center justify-between px-6 border-b border-slate-700">
-                <h1 class="text-xl font-bold"><i class="fas fa-shield-alt mr-2 text-blue-400"></i>ADMIN</h1>
-                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+        <aside id="sidebar" class="w-64 bg-neutral-950 text-white flex flex-col fixed md:static h-full transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out z-30 border-r border-neutral-800">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-neutral-800">
+                <a href="{{ url_for('admin.dashboard') }}" class="text-xl font-bold tracking-tight">
+                    <i class="fas fa-shield-alt mr-2 text-brand-500"></i>ADMIN
+                </a>
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white" aria-label="Закрыть меню"><i class="fas fa-times"></i></button>
             </div>
-            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                <a href="{{ url_for('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg bg-blue-600 text-white transition">
-                    <i class="fas fa-home w-6"></i> Дашборд
+            <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto" aria-label="Разделы админки">
+                {% for endpoint, icon_cls, label in nav %}
+                {% set active = request.endpoint == endpoint %}
+                <a href="{{ url_for(endpoint) }}"
+                   class="flex items-center px-4 py-2.5 rounded-lg transition {% if active %}bg-brand-500 text-black font-semibold{% else %}text-neutral-300 hover:bg-neutral-800 hover:text-white{% endif %}"
+                   {% if active %}aria-current="page"{% endif %}>
+                    <i class="fas {{ icon_cls }} w-6"></i> {{ label }}
                 </a>
-                <a href="{{ url_for('admin.products_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
-                    <i class="fas fa-box w-6"></i> Товары
-                </a>
-                <a href="{{ url_for('admin.categories_list') }}" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
-                    <i class="fas fa-tags w-6"></i> Категории
-                </a>
-                <a href="/" class="flex items-center px-4 py-3 rounded-lg hover:bg-slate-800 text-slate-300 transition">
+                {% endfor %}
+                <div class="my-4 border-t border-neutral-800"></div>
+                <a href="{{ url_for('home') }}" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-neutral-800 text-neutral-300 hover:text-white transition">
                     <i class="fas fa-arrow-left w-6"></i> На сайт
                 </a>
             </nav>
@@ -42,15 +111,31 @@
         <!-- Основной контент -->
         <div class="flex-1 flex flex-col overflow-hidden w-full">
             <!-- Шапка -->
-            <header class="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm">
-                <div class="flex items-center">
-                    <button onclick="toggleSidebar()" class="md:hidden mr-4 text-gray-600 hover:text-gray-900">
+            <header class="h-16 bg-white border-b flex items-center justify-between px-4 md:px-6 shadow-sm">
+                <div class="flex items-center min-w-0">
+                    <button onclick="toggleSidebar()" class="md:hidden mr-4 text-gray-600 hover:text-gray-900" aria-label="Открыть меню">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
-                    <h2 class="text-xl font-semibold">{% block header %}Панель управления{% endblock %}</h2>
+                    <h2 class="text-lg md:text-xl font-semibold truncate">{% block header %}Панель управления{% endblock %}</h2>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <div class="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">A</div>
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button type="button" id="admin-theme" class="h-9 w-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-600 transition" aria-label="Переключить тему">
+                        <i class="fas fa-circle-half-stroke"></i>
+                    </button>
+                    {% if current_user %}
+                    <span class="hidden sm:inline text-sm text-gray-500">{{ current_user.username }}</span>
+                    {% endif %}
+                    <div class="h-9 w-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold border border-brand-200">
+                        {{ current_user.username[:1]|upper if current_user else 'A' }}
+                    </div>
+                    {% if current_user %}
+                    <form method="POST" action="{{ url_for('logout') }}" class="inline">
+                        {{ csrf_input() }}
+                        <button type="submit" class="h-9 w-9 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-500 transition" title="Выйти" aria-label="Выйти">
+                            <i class="fas fa-right-from-bracket"></i>
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </header>
 
@@ -58,22 +143,16 @@
                 <!-- Flash-уведомления -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
-                        <div class="mb-6 space-y-3">
+                        <div class="mb-6 space-y-3" id="flash-area">
                             {% for category, message in messages %}
-                                <div class="p-4 rounded-lg flex items-center shadow-sm {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
-                                    <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} mr-3 text-lg"></i>
+                                <div class="flash p-4 rounded-lg flex items-center shadow-sm {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif category == 'info' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+                                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'info' %}fa-info-circle{% else %}fa-exclamation-circle{% endif %} mr-3 text-lg"></i>
                                     <span class="flex-1">{{ message }}</span>
-                                    <button onclick="this.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                                    <button type="button" onclick="this.closest('.flash').remove()" class="ml-4 opacity-60 hover:opacity-100" aria-label="Закрыть">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                             {% endfor %}
-                            <!-- Скрипт для авто-скрытия через 5 секунд -->
-                            <script>
-                                setTimeout(() => {
-                                    document.querySelectorAll('.fa-times').forEach(btn => btn.parentElement.parentElement.remove());
-                                }, 5000);
-                            </script.>
                         </div>
                     {% endif %}
                 {% endwith %}
@@ -85,11 +164,41 @@
 
     <script>
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('mobile-overlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('mobile-overlay').classList.toggle('hidden');
         }
+
+        // Модальные окна: openModal('id') / closeModal('id'); закрытие по Esc и клику на фон
+        function openModal(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('hidden');
+            var first = el.querySelector('input:not([type=hidden]), select');
+            if (first) setTimeout(function () { first.focus(); }, 30);
+        }
+        function closeModal(id) {
+            var el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target.matches('[data-modal]')) e.target.classList.add('hidden');
+            var c = e.target.closest('[data-confirm]');
+            if (c && !window.confirm(c.getAttribute('data-confirm'))) { e.preventDefault(); e.stopPropagation(); }
+        }, true);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') document.querySelectorAll('[data-modal]').forEach(function (m) { m.classList.add('hidden'); });
+        });
+
+        document.getElementById('admin-theme').addEventListener('click', function () {
+            var dark = document.documentElement.classList.toggle('dark');
+            try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+        });
+
+        // Автоскрытие уведомлений через 6 секунд
+        setTimeout(function () {
+            document.querySelectorAll('#flash-area .flash').forEach(function (n) { n.remove(); });
+        }, 6000);
     </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

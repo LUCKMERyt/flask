@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль {{ username }}{% endblock %}
+
+{% block content %}
+<section class="auth reveal">
+    <div class="auth__card card profile">
+        <span class="profile__avatar">{{ username[:1]|upper }}</span>
+        <h1 class="auth__title">{{ username }}</h1>
+        <p class="muted">ID пользователя: {{ user_id }}</p>
+        {% if known and created_at %}
+        <p class="muted">На сайте с {{ created_at|dt('%d.%m.%Y') }}</p>
+        {% elif not known %}
+        <p class="muted">Такой пользователь пока не найден в базе.</p>
+        {% endif %}
+        <a class="btn btn--ghost" href="{{ url_for('home') }}">На главную</a>
+    </div>
+</section>
+{% endblock %}

@@ -1,19 +1,45 @@
 {% extends 'base.html' %}
+{% from "_icons.html" import icon %}
 
 {% block title %}Обо мне{% endblock %}
 
 {% block content %}
-<main class="about">
-    <h1 class="about__title">Обо мне</h1>
+<div class="about">
+    <header class="page-head reveal">
+        <p class="eyebrow"><span class="eyebrow__dot"></span> Знакомство</p>
+        <h1 class="page-head__title about__title">Обо мне</h1>
+        <p class="page-head__lead">Коротко о том, чему я учился и на чём сделан этот сайт.</p>
+    </header>
 
-    <section class="education">
-        <h2 class="education__title">Образование</h2>
-        <p class="education__institution">
-            Шумерлинский политехнический техникум
-        </p>
-        <p class="education__details">
-            Computer Science · 2016–2020
-        </p>
+    <section class="card education reveal">
+        <div class="education__icon">{{ icon('graduation', 28) }}</div>
+        <div>
+            <h2 class="education__title">Образование</h2>
+            <p class="education__institution">Шумерлинский политехнический техникум</p>
+            <p class="education__details">Computer Science · 2016–2020</p>
+        </div>
     </section>
-</main>
+
+    <section class="card reveal">
+        <h2 class="card__title">{{ icon('code', 20) }} Технологии этого сайта</h2>
+        <ul class="chips chips--lg">
+            <li>Python</li>
+            <li>Flask</li>
+            <li>Flask-SQLAlchemy</li>
+            <li>Flask-Migrate</li>
+            <li>MySQL</li>
+            <li>Jinja2</li>
+            <li>HTML &amp; CSS</li>
+            <li>JavaScript</li>
+        </ul>
+    </section>
+
+    <section class="card contacts reveal">
+        <h2 class="card__title">{{ icon('github', 20) }} Контакты</h2>
+        <p class="muted">Мои проекты и код — на GitHub.</p>
+        <a class="btn btn--ghost" href="https://github.com/LUCKMERyt" target="_blank" rel="noopener noreferrer">
+            {{ icon('github', 18) }} github.com/LUCKMERyt
+        </a>
+    </section>
+</div>
 {% endblock %}
